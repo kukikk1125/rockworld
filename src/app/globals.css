@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --phone-width: 524px;
+  --phone-height: 1136px;
+  --safe-edge: 21.33px;
+  --background: 28 100% 97%;
+  --foreground: 338 24% 18%;
+  --card: 0 0% 100%;
+  --card-foreground: 338 24% 18%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 338 24% 18%;
+  --primary: 350 84% 67%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 47 100% 90%;
+  --secondary-foreground: 26 45% 24%;
+  --muted: 32 100% 94%;
+  --muted-foreground: 342 16% 44%;
+  --accent: 162 59% 90%;
+  --accent-foreground: 164 57% 23%;
+  --destructive: 3 74% 59%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 22 68% 86%;
+  --input: 22 68% 86%;
+  --ring: 350 84% 67%;
+  --success: 145 63% 43%;
+}
+
+.dark {
+  --background: 18 25% 10%;
+  --foreground: 24 40% 96%;
+  --card: 18 22% 14%;
+  --card-foreground: 24 40% 96%;
+  --popover: 18 22% 14%;
+  --popover-foreground: 24 40% 96%;
+  --primary: 350 86% 70%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 28 16% 20%;
+  --secondary-foreground: 24 40% 96%;
+  --muted: 24 16% 18%;
+  --muted-foreground: 24 18% 72%;
+  --accent: 165 30% 22%;
+  --accent-foreground: 160 70% 84%;
+  --destructive: 4 66% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 22 16% 24%;
+  --input: 22 16% 24%;
+  --ring: 350 86% 70%;
+  --success: 145 63% 43%;
+}
+
+* {
+  box-sizing: border-box;
+  border-color: hsl(var(--border));
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 198, 126, 0.26), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 160, 192, 0.22), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(147, 227, 204, 0.24), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 246, 239, 0.94));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
