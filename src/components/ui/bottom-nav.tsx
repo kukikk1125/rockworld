@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { getAssetPath } from "@/lib/assets";
 
 const navItems = [
   {
@@ -52,7 +53,7 @@ export function BottomNav() {
               >
                 <div className="relative w-7 h-7">
                   <Image
-                    src={item.iconPath}
+                    src={getAssetPath(item.iconPath)}
                     alt={item.label}
                     fill
                     className="object-contain"

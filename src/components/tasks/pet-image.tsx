@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { getAssetPath } from "@/lib/assets";
 
 export function PetImage({
   src,
@@ -15,7 +16,7 @@ export function PetImage({
   className?: string;
   priority?: boolean;
 }) {
-  const [imageSrc, setImageSrc] = useState(src || "/pets/placeholder.png");
+  const [imageSrc, setImageSrc] = useState(src ? getAssetPath(src) : getAssetPath("/pets/placeholder.png"));
 
   return (
     <div className={cn("relative rounded-2xl bg-white", className)}>
@@ -27,7 +28,7 @@ export function PetImage({
         sizes="(max-width: 402px) calc(100vw - 24px), (max-width: 768px) 50vw, 20vw"
         className="object-contain"
         unoptimized
-        onError={() => setImageSrc("/pets/placeholder.png")}
+        onError={() => setImageSrc(getAssetPath("/pets/placeholder.png"))}
       />
     </div>
   );
