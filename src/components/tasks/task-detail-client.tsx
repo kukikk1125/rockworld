@@ -7,18 +7,14 @@ import { PetInfoCard } from "@/components/tasks/pet-info-card";
 import { TaskStatusCard } from "@/components/tasks/task-status-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { hydrateTask } from "@/lib/calculations";
 import { getTasks, saveTask, setCurrentTask } from "@/lib/storage";
-import { Task, ActionType } from "@/types";
-
-type ActionKey = "reset" | "archive";
+import { Task } from "@/types";
 
 export function TaskDetailClient() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const [task, setTask] = useState<Task | null>(null);
-  const [confirmAction, setConfirmAction] = useState<ActionKey | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
@@ -76,24 +72,19 @@ export function TaskDetailClient() {
   }
 
   function handleComplete() {
-    setShowAnimation(true);
-    setTimeout(() => {
-      setShowAnimation(false);
-      setConfirmAction("archive");
-    }, 1500);
-  }
-
-  function doArchive() {
     if (!task) return;
-    const finalStatus = task.shieldBreakCount >= 80 ? "保底获取" : "概率获取";
-    persist({
-      ...task,
-      completed: true,
-      shinyStatus: finalStatus,
-    });
-    setCurrentTask(undefined);
-    setConfirmAction(null);
-    router.push("/history");
+    setShowAnimation(true);
+    
+    setTimeout(() => {
+      const finalStatus = task.shieldBreakCount >= 80 ? "保底获取" : "概率获取";
+      persist({
+        ...task,
+        completed: true,
+        shinyStatus: finalStatus,
+      });
+      setCurrentTask(undefined);
+      router.push("/history");
+    }, 1500);
   }
 
   if (!hydrated) {
@@ -105,56 +96,42 @@ export function TaskDetailClient() {
   }
 
   return (
-    <>
-      <div className="space-y-3">
-        <PetInfoCard task={hydrated} />
-        <Card className="overflow-hidden bg-gradient-to-br from-rose-50 via-white to-amber-50 p-3">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <h3 className="text-sm font-black">点一下就记一次</h3>
+    <div className="space-y-3">
+      <PetInfoCard task={hydrated} />
+      <Card className="overflow-hidden bg-gradient-to-br from-rose-50 via-white to-amber-50 p-3">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-sm font-black">点一下就记一次</h3>
+        </div>
+
+        <div className="space-y-2">
+          <div className="grid grid-cols-4 gap-2">
+            <ActionButton 
+              label="+1 污染" 
+              tone="rose"
+              onClick={incrementShield} 
+            />
+            <ActionButton 
+              label="+1 原色" 
+              tone="sky"
+              onClick={incrementNormal} 
+            />
+            <ActionButton
+              label="异色"
+              variant="outline"
+              onClick={handleComplete}
+            />
+            <ActionButton
+              label="撤销"
+              variant="outline"
+              onClick={handleClearLast}
+            />
           </div>
+        </div>
+      </Card>
 
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-2">
-              <ActionButton 
-                label="+1 污染" 
-                tone="rose"
-                onClick={incrementShield} 
-              />
-              <ActionButton 
-                label="+1 原色" 
-                tone="sky"
-                onClick={incrementNormal} 
-              />
-              <ActionButton
-                label="异色"
-                variant="outline"
-                onClick={handleComplete}
-              />
-              <ActionButton
-                label="撤销"
-                variant="outline"
-                onClick={handleClearLast}
-              />
-            </div>
-          </div>
-        </Card>
-
-        <TaskStatusCard task={hydrated} showAnimation={showAnimation} />
-        <CycleStatusCard task={hydrated} />
-      </div>
-
-      <ConfirmDialog
-        open={confirmAction === "archive"}
-        title="归档成功"
-        description="任务已完成！已保存到异色存档中。"
-        confirmText="去查看"
-        onCancel={() => {
-          setConfirmAction(null);
-          doArchive();
-        }}
-        onConfirm={doArchive}
-      />
-    </>
+      <TaskStatusCard task={hydrated} showAnimation={showAnimation} />
+      <CycleStatusCard task={hydrated} />
+    </div>
   );
 }
 

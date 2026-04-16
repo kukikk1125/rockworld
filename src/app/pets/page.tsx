@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PetImage } from "@/components/tasks/pet-image";
 import { Badge } from "@/components/ui/badge";
@@ -9,14 +9,23 @@ import { Card } from "@/components/ui/card";
 import { PageShell } from "@/components/ui/page-shell";
 import { petPresets } from "@/lib/task-factory";
 import { getTasks, saveTask, setCurrentTask } from "@/lib/storage";
-import { PetPreset } from "@/types";
+import { PetPreset, Task } from "@/types";
 
 export default function PetsPage() {
   const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<PetPreset | null>(null);
 
+  useEffect(() => {
+    setTasks(getTasks());
+  }, []);
+
+  const completedPetNames = useMemo(
+    () => tasks.filter((task) => task.completed).map((task) => task.petName),
+    [tasks]
+  );
+
   function handleSelectPet(preset: PetPreset) {
-    const tasks = getTasks();
     const activeTasks = tasks.filter((task) => !task.completed);
     const existing = activeTasks.find((task) => task.petName === preset.petName);
 
@@ -37,25 +46,31 @@ export default function PetsPage() {
     <>
       <PageShell title="精灵信息">
         <div className="grid grid-cols-4 gap-1">
-          {petPresets.map((preset) => (
-            <button
-              key={preset.petName}
-              type="button"
-              onClick={() => setSelectedPreset(preset)}
-              className="rounded-[12px] p-1 transition-transform hover:-translate-y-0.5"
-            >
-              <div className="flex flex-col items-center gap-0.5 text-center">
-                <PetImage
-                  src={preset.image}
-                  alt={preset.petName}
-                  className="aspect-square w-full max-w-[56px] rounded-full border-2 border-white shadow-sm"
-                />
-                <p className="line-clamp-1 text-[8px] font-black leading-3">
-                  {preset.petName}
-                </p>
-              </div>
-            </button>
-          ))}
+          {petPresets.map((preset) => {
+            const isObtained = completedPetNames.includes(preset.petName);
+            
+            return (
+              <button
+                key={preset.petName}
+                type="button"
+                onClick={() => setSelectedPreset(preset)}
+                className="rounded-[12px] p-1 transition-transform hover:-translate-y-0.5"
+              >
+                <div className="flex flex-col items-center gap-0.5 text-center">
+                  <div className={!isObtained ? "opacity-40 saturate-30" : ""}>
+                    <PetImage
+                      src={preset.image}
+                      alt={preset.petName}
+                      className="aspect-square w-full max-w-[56px] rounded-full border-2 border-white shadow-sm"
+                    />
+                  </div>
+                  <p className={`line-clamp-1 text-[8px] font-black leading-3 ${!isObtained ? "text-muted-foreground" : ""}`}>
+                    {preset.petName}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </PageShell>
 

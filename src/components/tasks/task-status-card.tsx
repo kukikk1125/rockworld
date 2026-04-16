@@ -5,6 +5,7 @@ import { Task } from "@/types";
 
 export function TaskStatusCard({ task, showAnimation = false }: { task: Task; showAnimation?: boolean }) {
   const totalActions = task.actionHistory?.length || 0;
+  const lastActionIndex = totalActions;
   
   return (
     <Card className="p-4">
@@ -23,9 +24,10 @@ export function TaskStatusCard({ task, showAnimation = false }: { task: Task; sh
             const actionType = task.actionHistory?.[actionIndex];
             const isCurrent = num === totalActions + 1;
             const isLast = num === 80;
+            const isShinyPosition = task.completed && num === lastActionIndex;
             
             let tone = "muted";
-            if (task.completed && isLast) {
+            if (isShinyPosition) {
               tone = "shiny";
             } else if (actionType === "shield") {
               tone = "rose";
@@ -41,22 +43,18 @@ export function TaskStatusCard({ task, showAnimation = false }: { task: Task; sh
                 className={`
                   aspect-square rounded-full flex items-center justify-center text-[9px] font-bold
                   ${getToneClass(tone)}
-                  ${showAnimation && isLast ? "animate-pulse scale-110" : ""}
+                  ${showAnimation && isShinyPosition ? "animate-pulse scale-110" : ""}
                   transition-all duration-300
                 `}
               >
-                {isLast && (task.completed || (num <= totalActions) || showAnimation) ? (
-                  (task.completed || showAnimation) ? (
-                    <div className="w-full h-full relative">
-                      <PetImage
-                        src={task.image}
-                        alt="异色"
-                        className="aspect-square w-full h-full rounded-full"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-[8px] font-bold">保底</span>
-                  )
+                {isShinyPosition ? (
+                  <div className="w-full h-full relative">
+                    <PetImage
+                      src={task.image}
+                      alt="异色"
+                      className="aspect-square w-full h-full rounded-full"
+                    />
+                  </div>
                 ) : (
                   <span className="text-[8px] font-bold">
                     {isLast && num > totalActions ? "保底" : ""}
