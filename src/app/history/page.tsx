@@ -127,11 +127,8 @@ function TaskCard({
         >
           <PetImage
             src={task.image}
-            thumbnailSrc={task.thumbnailImage}
-            detailSrc={task.detailImage}
             alt={task.petName}
             className="aspect-square w-14 rounded-[16px]"
-            type="thumbnail"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">

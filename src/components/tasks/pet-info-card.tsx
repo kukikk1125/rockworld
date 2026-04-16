@@ -9,11 +9,8 @@ export function PetInfoCard({ task }: { task: Task }) {
       <div className="flex gap-3">
         <PetImage
           src={task.image}
-          thumbnailSrc={task.thumbnailImage}
-          detailSrc={task.detailImage}
           alt={task.petName}
           className="aspect-square w-16 rounded-[18px]"
-          type="detail"
         />
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap gap-1 mb-1.5">

@@ -8,9 +8,7 @@
     "bPet": "",
     "spawnLocation": "星霜崖地 → 岚语峰上方",
     "fruitInfo": "常驻精灵果实（冰系）",
-    "image": "/pets/yise-daermaodou.png",
-    "thumbnailImage": "/pets/yise-daermaodou.png",
-    "detailImage": "/pets/yise-daermaodou.png"
+    "image": "/pets/yise-daermaodou.png"
   },
   {
     "petName": "异色恶魔狼",
@@ -21,9 +19,7 @@
     "bPet": "",
     "spawnLocation": "商店街西 → 洛克里安庇护所",
     "fruitInfo": "常驻精灵果实（恶魔系）",
-    "image": "/pets/yise-emolang.png",
-    "thumbnailImage": "/pets/yise-emolang.png",
-    "detailImage": "/pets/yise-emolang.png"
+    "image": "/pets/yise-emolang.png"
   },
   {
     "petName": "异色酷拉",
@@ -34,9 +30,7 @@
     "bPet": "",
     "spawnLocation": "望风半岛 / 王国监狱",
     "fruitInfo": "常驻精灵果实（电系）",
-    "image": "/pets/yise-kula.png",
-    "thumbnailImage": "/pets/yise-kula.png",
-    "detailImage": "/pets/yise-kula.png"
+    "image": "/pets/yise-kula.png"
   },
   {
     "petName": "异色呼呼猪",
@@ -47,9 +41,7 @@
     "bPet": "",
     "spawnLocation": "星霜崖地",
     "fruitInfo": "常驻精灵果实（冰系）",
-    "image": "/pets/yise-huhuzhu.png",
-    "thumbnailImage": "/pets/yise-huhuzhu.png",
-    "detailImage": "/pets/yise-huhuzhu.png"
+    "image": "/pets/yise-huhuzhu.png"
   },
   {
     "petName": "异色格兰球",
@@ -60,9 +52,7 @@
     "bPet": "",
     "spawnLocation": "普拉塔草原",
     "fruitInfo": "常驻精灵果实（草系）",
-    "image": "/pets/yise-gelanqiu.png",
-    "thumbnailImage": "/pets/yise-gelanqiu.png",
-    "detailImage": "/pets/yise-gelanqiu.png"
+    "image": "/pets/yise-gelanqiu.png"
   },
   {
     "petName": "异色机械方方",
@@ -73,9 +63,7 @@
     "bPet": "",
     "spawnLocation": "弃之宝岛",
     "fruitInfo": "常驻精灵果实（机械系）",
-    "image": "/pets/yise-jixiefangfang.png",
-    "thumbnailImage": "/pets/yise-jixiefangfang.png",
-    "detailImage": "/pets/yise-jixiefangfang.png"
+    "image": "/pets/yise-jixiefangfang.png"
   },
   {
     "petName": "异色月牙雪熊",
@@ -86,9 +74,7 @@
     "bPet": "幻系（怖哭菇）",
     "spawnLocation": "星霜崖地",
     "fruitInfo": "赛季限定果实（A：冰系；B：幻系）",
-    "image": "/pets/yise-yueyaxuexiong.png",
-    "thumbnailImage": "/pets/yise-yueyaxuexiong.png",
-    "detailImage": "/pets/yise-yueyaxuexiong.png"
+    "image": "/pets/yise-yueyaxuexiong.png"
   },
   {
     "petName": "异色粉星仔",
@@ -99,9 +85,7 @@
     "bPet": "幻系（怖哭菇）",
     "spawnLocation": "星霜崖地",
     "fruitInfo": "赛季限定果实（A：电系；B：幻系）",
-    "image": "/pets/yise-fenxingzi.png",
-    "thumbnailImage": "/pets/yise-fenxingzi.png",
-    "detailImage": "/pets/yise-fenxingzi.png"
+    "image": "/pets/yise-fenxingzi.png"
   },
   {
     "petName": "异色粉粉星",
@@ -112,9 +96,7 @@
     "bPet": "幻系（怖哭菇）",
     "spawnLocation": "星霜崖地",
     "fruitInfo": "赛季限定果实（参考粉星仔搭配）",
-    "image": "/pets/yise-fenfenxing.png",
-    "thumbnailImage": "/pets/yise-fenfenxing.png",
-    "detailImage": "/pets/yise-fenfenxing.png"
+    "image": "/pets/yise-fenfenxing.png"
   },
   {
     "petName": "异色燃薪虫",
@@ -125,9 +107,7 @@
     "bPet": "草系（格兰球）",
     "spawnLocation": "维苏威火山 → 地心",
     "fruitInfo": "赛季限定果实（A：火系；B：草系）",
-    "image": "/pets/yise-ranxinchong.png",
-    "thumbnailImage": "/pets/yise-ranxinchong.png",
-    "detailImage": "/pets/yise-ranxinchong.png"
+    "image": "/pets/yise-ranxinchong.png"
   },
   {
     "petName": "异色空空颅",
@@ -138,9 +118,7 @@
     "bPet": "幻系（梦悠悠）",
     "spawnLocation": "迷雾之森",
     "fruitInfo": "赛季限定果实（A：幽系；B：幻系）",
-    "image": "/pets/yise-kongkonglu.png",
-    "thumbnailImage": "/pets/yise-kongkonglu.png",
-    "detailImage": "/pets/yise-kongkonglu.png"
+    "image": "/pets/yise-kongkonglu.png"
   },
   {
     "petName": "异色双灯鱼",
@@ -151,9 +129,7 @@
     "bPet": "水系（利灯鱼）",
     "spawnLocation": "杰诺斯深海",
     "fruitInfo": "赛季限定果实（A：水系；B：水系）",
-    "image": "/pets/yise-shuangdengyu.png",
-    "thumbnailImage": "/pets/yise-shuangdengyu.png",
-    "detailImage": "/pets/yise-shuangdengyu.png"
+    "image": "/pets/yise-shuangdengyu.png"
   },
   {
     "petName": "异色贝瑟",
@@ -164,9 +140,7 @@
     "bPet": "火系（音速犬）",
     "spawnLocation": "拉布朗矿山",
     "fruitInfo": "赛季限定果实（A：石系；B：火系）",
-    "image": "/pets/yise-beise.png",
-    "thumbnailImage": "/pets/yise-beise.png",
-    "detailImage": "/pets/yise-beise.png"
+    "image": "/pets/yise-beise.png"
   },
   {
     "petName": "异色嗜光嗡嗡",
@@ -177,9 +151,7 @@
     "bPet": "草系（奇丽草）",
     "spawnLocation": "光之藤",
     "fruitInfo": "赛季限定果实（A：虫系；B：草系）",
-    "image": "/pets/yise-shiguangwengweng.png",
-    "thumbnailImage": "/pets/yise-shiguangwengweng.png",
-    "detailImage": "/pets/yise-shiguangwengweng.png"
+    "image": "/pets/yise-shiguangwengweng.png"
   },
   {
     "petName": "异色治愈兔",
@@ -190,9 +162,7 @@
     "bPet": "草系（奇丽草）",
     "spawnLocation": "光之藤",
     "fruitInfo": "赛季限定果实（A：光系；B：草系）",
-    "image": "/pets/yise-zhiyutu.png",
-    "thumbnailImage": "/pets/yise-zhiyutu.png",
-    "detailImage": "/pets/yise-zhiyutu.png"
+    "image": "/pets/yise-zhiyutu.png"
   },
   {
     "petName": "异色奇丽花",
@@ -203,8 +173,6 @@
     "bPet": "光系（小天马）",
     "spawnLocation": "普拉塔草原",
     "fruitInfo": "赛季限定果实（A：草系；B：光系）",
-    "image": "/pets/yise-qilihua.png",
-    "thumbnailImage": "/pets/yise-qilihua.png",
-    "detailImage": "/pets/yise-qilihua.png"
+    "image": "/pets/yise-qilihua.png"
   }
 ]

@@ -13,8 +13,6 @@ export interface PetPreset {
   spawnLocation: string;
   fruitInfo: string;
   image: string;
-  thumbnailImage?: string;
-  detailImage?: string;
 }
 
 export type ActionType = "shield" | "normal";
@@ -43,8 +41,6 @@ export interface Task {
   spawnLocation?: string;
   fruitInfo?: string;
   image?: string;
-  thumbnailImage?: string;
-  detailImage?: string;
   createdAt: string;
   updatedAt: string;
   completed: boolean;

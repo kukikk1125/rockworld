@@ -38,8 +38,6 @@ export function createTaskFromPreset(
     spawnLocation: overrides?.spawnLocation ?? preset?.spawnLocation ?? "",
     fruitInfo: overrides?.fruitInfo ?? preset?.fruitInfo ?? "",
     image: overrides?.image ?? preset?.image ?? "/pets/placeholder.png",
-    thumbnailImage: overrides?.thumbnailImage ?? preset?.thumbnailImage,
-    detailImage: overrides?.detailImage ?? preset?.detailImage,
     createdAt: overrides?.createdAt ?? now,
     updatedAt: overrides?.updatedAt ?? now,
     completed: overrides?.completed ?? false,
