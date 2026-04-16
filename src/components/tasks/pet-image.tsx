@@ -5,18 +5,39 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { getAssetPath } from "@/lib/assets";
 
+type ImageType = "thumbnail" | "detail";
+
 export function PetImage({
   src,
+  thumbnailSrc,
+  detailSrc,
   alt,
   className,
   priority,
+  type = "thumbnail",
 }: {
   src?: string;
+  thumbnailSrc?: string;
+  detailSrc?: string;
   alt: string;
   className?: string;
   priority?: boolean;
+  type?: ImageType;
 }) {
-  const [imageSrc, setImageSrc] = useState(src ? getAssetPath(src) : getAssetPath("/pets/placeholder.png"));
+  const getImagePath = () => {
+    if (type === "thumbnail" && thumbnailSrc) {
+      return getAssetPath(thumbnailSrc);
+    }
+    if (type === "detail" && detailSrc) {
+      return getAssetPath(detailSrc);
+    }
+    if (src) {
+      return getAssetPath(src);
+    }
+    return getAssetPath("/pets/placeholder.png");
+  };
+
+  const [imageSrc, setImageSrc] = useState(getImagePath());
 
   return (
     <div className={cn("relative rounded-2xl bg-white", className)}>

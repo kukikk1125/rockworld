@@ -47,8 +47,11 @@ export default function PetsPage() {
               <div className="flex flex-col items-center gap-0.5 text-center">
                 <PetImage
                   src={preset.image}
+                  thumbnailSrc={preset.thumbnailImage}
+                  detailSrc={preset.detailImage}
                   alt={preset.petName}
                   className="aspect-square w-full max-w-[56px] rounded-full border-2 border-white shadow-sm"
+                  type="thumbnail"
                 />
                 <p className="line-clamp-1 text-[8px] font-black leading-3">
                   {preset.petName}
@@ -66,8 +69,11 @@ export default function PetsPage() {
               <div className="flex gap-3">
                 <PetImage
                   src={selectedPreset.image}
+                  thumbnailSrc={selectedPreset.thumbnailImage}
+                  detailSrc={selectedPreset.detailImage}
                   alt={selectedPreset.petName}
                   className="aspect-square w-20 rounded-[20px]"
+                  type="detail"
                 />
                 <div>
                   <h3 className="text-lg font-black">{selectedPreset.petName}</h3>

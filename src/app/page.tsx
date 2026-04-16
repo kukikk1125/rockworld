@@ -75,8 +75,11 @@ export default function HomePage() {
                   <div className="flex flex-col items-center gap-0.5 text-center">
                     <PetImage
                       src={preset.image}
+                      thumbnailSrc={preset.thumbnailImage}
+                      detailSrc={preset.detailImage}
                       alt={preset.petName}
                       className="aspect-square w-full max-w-[56px] rounded-full border-2 border-white shadow-sm"
+                      type="thumbnail"
                     />
                     <p className="line-clamp-1 text-[8px] font-black leading-3">
                       {preset.petName}
@@ -93,9 +96,12 @@ export default function HomePage() {
             <div className="grid grid-cols-[64px_1fr] gap-2.5">
               <PetImage
                 src={currentTask.image}
+                thumbnailSrc={currentTask.thumbnailImage}
+                detailSrc={currentTask.detailImage}
                 alt={currentTask.petName}
                 className="aspect-square w-full rounded-[16px]"
                 priority
+                type="detail"
               />
               <div className="space-y-1.5">
                 <div className="flex flex-wrap gap-1">
@@ -151,8 +157,11 @@ export default function HomePage() {
                   <div className="flex flex-col items-center gap-0.5 text-center">
                     <PetImage
                       src={preset.image}
+                      thumbnailSrc={preset.thumbnailImage}
+                      detailSrc={preset.detailImage}
                       alt={preset.petName}
                       className="aspect-square w-full max-w-[56px] rounded-full border-2 border-white shadow-sm"
+                      type="thumbnail"
                     />
                     <p className="line-clamp-1 text-[8px] font-black leading-3">
                       {preset.petName}
@@ -194,8 +203,11 @@ function PetConfirmDialog({
         <div className="flex flex-col items-center gap-3">
           <PetImage
             src={preset.image}
+            thumbnailSrc={preset.thumbnailImage}
+            detailSrc={preset.detailImage}
             alt={preset.petName}
             className="aspect-square w-20 rounded-[20px]"
+            type="detail"
           />
           <div className="text-center">
             <h3 className="text-base font-black">{preset.petName}</h3>
