@@ -7,10 +7,7 @@ import { Task } from "@/types";
 export function CycleStatusCard({ task }: { task: Task }) {
   if (task.mode !== "3×3混抓法") return null;
 
-  const { aInRound, bInRound } = getCycleProgress(
-    task.aCaught ?? 0,
-    task.bCaught ?? 0,
-  );
+  const { aInRound, bInRound } = getCycleProgress(task.aCaught ?? 0, task.bCaught ?? 0);
 
   return (
     <Card className="p-4">
@@ -19,9 +16,7 @@ export function CycleStatusCard({ task }: { task: Task }) {
           <p className="text-[13px] text-muted-foreground">3×3 模式状态</p>
           <h3 className="text-lg font-black">当前轮数与抓取提示</h3>
         </div>
-        <Badge className="bg-sky-100 text-sky-700">
-          当前应抓 {task.currentCycleTarget ?? "A"}
-        </Badge>
+        <Badge className="bg-sky-100 text-sky-700">当前应抓 {task.currentCycleTarget ?? "A"}</Badge>
       </div>
 
       <div className="mt-4 grid gap-3">

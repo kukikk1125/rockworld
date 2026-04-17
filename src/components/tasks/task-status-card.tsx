@@ -1,15 +1,21 @@
+import { PetImage } from "@/components/tasks/pet-image";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { PetImage } from "@/components/tasks/pet-image";
 import { Task } from "@/types";
 
-export function TaskStatusCard({ task, showAnimation = false }: { task: Task; showAnimation?: boolean }) {
+export function TaskStatusCard({
+  task,
+  showAnimation = false,
+}: {
+  task: Task;
+  showAnimation?: boolean;
+}) {
   const totalActions = task.actionHistory?.length || 0;
-  const lastActionIndex = totalActions;
-  
+  const shinyIndex = task.completed ? totalActions + 1 : -1;
+
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] text-muted-foreground">核心统计</p>
           <h3 className="text-lg font-black">保底进度表</h3>
@@ -22,43 +28,33 @@ export function TaskStatusCard({ task, showAnimation = false }: { task: Task; sh
           {Array.from({ length: 80 }, (_, i) => i + 1).map((num) => {
             const actionIndex = num - 1;
             const actionType = task.actionHistory?.[actionIndex];
-            const isCurrent = num === totalActions + 1;
+            const isCurrent = !task.completed && num === totalActions + 1;
             const isLast = num === 80;
-            const isShinyPosition = task.completed && num === lastActionIndex;
-            
-            let tone = "muted";
-            if (isShinyPosition) {
-              tone = "shiny";
-            } else if (actionType === "shield") {
-              tone = "rose";
-            } else if (actionType === "normal") {
-              tone = "sky";
-            } else if (isCurrent) {
-              tone = "current";
-            }
+            const isShinyPosition = num === shinyIndex;
+
+            let tone: "muted" | "rose" | "sky" | "current" | "shiny" = "muted";
+            if (isShinyPosition) tone = "shiny";
+            else if (actionType === "shield") tone = "rose";
+            else if (actionType === "normal") tone = "sky";
+            else if (isCurrent) tone = "current";
 
             return (
               <div
                 key={num}
-                className={`
-                  aspect-square rounded-full flex items-center justify-center text-[9px] font-bold
-                  ${getToneClass(tone)}
-                  ${showAnimation && isShinyPosition ? "animate-pulse scale-110" : ""}
-                  transition-all duration-300
-                `}
+                className={[
+                  "aspect-square rounded-full transition-all duration-300",
+                  "flex items-center justify-center text-[9px] font-bold",
+                  getToneClass(tone),
+                  showAnimation && isShinyPosition ? "scale-110 animate-pulse" : "",
+                ].join(" ")}
               >
                 {isShinyPosition ? (
-                  <div className="w-full h-full relative">
-                    <PetImage
-                      src={task.image}
-                      alt="异色"
-                      className="aspect-square w-full h-full rounded-full"
-                    />
+                  <div className="relative h-full w-full overflow-hidden rounded-full ring-2 ring-amber-300/70">
+                    <PetImage src={task.image} alt={`${task.petName} 异色`} className="h-full w-full rounded-full" />
                   </div>
                 ) : (
                   <span className="text-[8px] font-bold">
-                    {isLast && num > totalActions ? "保底" : ""}
-                    {!isLast ? num : ""}
+                    {isLast && num > totalActions ? "保底" : !isLast ? num : ""}
                   </span>
                 )}
               </div>
@@ -66,7 +62,7 @@ export function TaskStatusCard({ task, showAnimation = false }: { task: Task; sh
           })}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
+        <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
           <span>污染：{task.shieldBreakCount}</span>
           <span>原色：{task.normalCaughtCount}</span>
           <span>总计：{totalActions}/80</span>
@@ -77,15 +73,15 @@ export function TaskStatusCard({ task, showAnimation = false }: { task: Task; sh
   );
 }
 
-function getToneClass(tone: string) {
+function getToneClass(tone: "muted" | "rose" | "sky" | "current" | "shiny") {
   const classes = {
     muted: "bg-muted/50 text-muted-foreground",
     rose: "bg-rose-500 text-white",
     sky: "bg-sky-500 text-white",
     current: "bg-rose-200 text-rose-700 ring-2 ring-rose-500",
-    shiny: "bg-emerald-500 text-white",
+    shiny: "bg-amber-100 text-amber-800 ring-2 ring-amber-400/70",
   };
-  return classes[tone as keyof typeof classes] || classes.muted;
+  return classes[tone];
 }
 
 function getStatusBadgeClass(status: Task["shinyStatus"]) {

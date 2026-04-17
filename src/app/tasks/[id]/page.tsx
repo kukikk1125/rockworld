@@ -8,11 +8,7 @@ export function generateStaticParams() {
 export default function TaskDetailPage() {
   return (
     <PageShell title="任务详情">
-      <TaskDetailLoader />
+      <TaskDetailClient />
     </PageShell>
   );
-}
-
-function TaskDetailLoader() {
-  return <TaskDetailClient />;
 }

@@ -45,8 +45,17 @@ export function saveTask(task: Task, makeCurrent = true) {
   const nextTasks = [...data.tasks];
   const index = nextTasks.findIndex((item) => item.id === task.id);
 
-  if (index >= 0) nextTasks[index] = hydrateTask(task);
-  else nextTasks.push(hydrateTask(task));
+  if (index >= 0) {
+    const existingTask = hydrateTask(nextTasks[index]);
+
+    if (existingTask.completed) {
+      nextTasks[index] = existingTask;
+    } else {
+      nextTasks[index] = hydrateTask(task);
+    }
+  } else {
+    nextTasks.push(hydrateTask(task));
+  }
 
   saveAppData({
     ...data,

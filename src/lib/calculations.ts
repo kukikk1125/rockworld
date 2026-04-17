@@ -8,10 +8,7 @@ export function calcCycleRounds(aCaught = 0, bCaught = 0) {
   return Math.floor((aCaught + bCaught) / 6);
 }
 
-export function calcEstimatedNormalRemaining(
-  pityRemaining: number,
-  normalCaughtCount: number,
-) {
+export function calcEstimatedNormalRemaining(pityRemaining: number, normalCaughtCount: number) {
   return Math.max(pityRemaining * 7 - normalCaughtCount, 0);
 }
 
@@ -43,20 +40,14 @@ export function getCycleProgress(aCaught = 0, bCaught = 0) {
   const aInRound = Math.min(totalInRound, 3);
   const bInRound = Math.max(totalInRound - 3, 0);
 
-  return {
-    aInRound,
-    bInRound,
-    totalInRound,
-  };
+  return { aInRound, bInRound, totalInRound };
 }
 
 export function hydrateTask(task: Task): Task {
   const pityRemaining = calcPityRemaining(task.shieldBreakCount);
   const cycleRounds = calcCycleRounds(task.aCaught ?? 0, task.bCaught ?? 0);
   const currentCycleTarget =
-    task.mode === "3×3混抓法"
-      ? getCurrentCycleTarget(task.aCaught ?? 0, task.bCaught ?? 0)
-      : undefined;
+    task.mode === "3×3混抓法" ? getCurrentCycleTarget(task.aCaught ?? 0, task.bCaught ?? 0) : undefined;
 
   return {
     ...task,
@@ -64,10 +55,7 @@ export function hydrateTask(task: Task): Task {
     pityRemaining,
     cycleRounds,
     currentCycleTarget,
-    estimatedNormalRemaining: calcEstimatedNormalRemaining(
-      pityRemaining,
-      task.normalCaughtCount,
-    ),
+    estimatedNormalRemaining: calcEstimatedNormalRemaining(pityRemaining, task.normalCaughtCount),
     estimatedBallCost: calcEstimatedBallCost(pityRemaining),
     shinyStatus: calcShinyStatus(task.shieldBreakCount, task.probabilityMarked, task.completed, task.shinyStatus),
   };
