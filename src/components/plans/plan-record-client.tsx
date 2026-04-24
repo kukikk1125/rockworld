@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { PetImage } from "@/components/tasks/pet-image";
 import { SpiritPickerDialog } from "@/components/tasks/spirit-picker-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -156,19 +156,21 @@ function SpiritRecordCard({
 }
 
 export function PlanRecordClient() {
-  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [task, setTask] = useState<Task | null>(null);
   const [spirits, setSpirits] = useState<Spirit[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  const taskId = searchParams.get("taskId") ?? searchParams.get("id") ?? "";
+
   useEffect(() => {
-    const matched = getTaskById(params.id);
+    const matched = getTaskById(taskId);
     if (!matched) return;
     setTask(matched);
     setSpirits(getSpirits());
     setCurrentTask(matched.id);
-  }, [params.id]);
+  }, [taskId]);
 
   useEffect(() => {
     if (!toast) return;

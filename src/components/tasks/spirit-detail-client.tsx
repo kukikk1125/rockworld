@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PetImage } from "@/components/tasks/pet-image";
 import { TaskSelectDialog } from "@/components/tasks/task-select-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -23,16 +23,17 @@ import { Task } from "@/types";
 type QuickAction = "pollution" | "normal" | "shiny";
 
 export function SpiritDetailClient() {
-  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<QuickAction | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const spiritId = searchParams.get("spiritId") ?? searchParams.get("id") ?? "";
   const summary = useMemo(
-    () => getSpiritSummary(params.id),
-    [params.id, refreshKey],
+    () => getSpiritSummary(spiritId),
+    [spiritId, refreshKey],
   );
 
   const candidatePlans = useMemo(() => {
@@ -93,19 +94,19 @@ export function SpiritDetailClient() {
     const plan = matchedPlan?.isDirected ? buildDirectedPlan(summary.spirit) : matchedPlan;
     if (!plan) return;
 
-    const existing = getTasks().find((task) => task.planId === plan.id);
-    if (existing) {
-      setCurrentTask(existing.id);
-      router.push(`/tasks/${existing.id}`);
-      return;
-    }
+      const existing = getTasks().find((task) => task.planId === plan.id);
+      if (existing) {
+        setCurrentTask(existing.id);
+        router.push(`/tasks/view?taskId=${encodeURIComponent(existing.id)}`);
+        return;
+      }
 
     const nextTask = createTaskFromPlan(plan, {
       taskName: plan.isDirected ? `${summary.spirit.name}定向刷取` : plan.planName,
     });
     saveTask(nextTask);
     setCurrentTask(nextTask.id);
-    router.push(`/tasks/${nextTask.id}`);
+    router.push(`/tasks/view?taskId=${encodeURIComponent(nextTask.id)}`);
   }
 
   if (!summary) {

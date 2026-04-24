@@ -94,6 +94,21 @@ Every time features are updated, we should check this file first and re-run the 
     - `/rockworld/pets/`
     - `/rockworld/settings/`
 
+### 8. GitHub Pages cannot directly serve runtime dynamic ids
+
+- Symptom:
+  - routes such as `/rockworld/tasks/e09wnhqq` return `404`
+  - routes such as `/rockworld/spirits/some-id` return `404`
+- Root cause:
+  - GitHub Pages is serving a static export
+  - task ids and spirit ids are created at runtime from local storage, so there is no exported file for each dynamic id
+- Fix:
+  - do not navigate to runtime dynamic paths in production export
+  - use static pages with query parameters instead, for example:
+    - `/rockworld/tasks/view/?taskId=...`
+    - `/rockworld/spirits/view/?spiritId=...`
+  - before shipping any new navigation, verify that every deployed URL exists in the exported `out` directory
+
 ## Update Rules
 
 After every feature update:
@@ -105,6 +120,7 @@ After every feature update:
 5. If an old port behaves strangely, start a fresh dev server on a new port and verify again.
 6. If a new issue is found, append it to this file before closing the task.
 7. If the site deploys to GitHub Pages, verify the exported route structure matches the deployed URLs.
+8. If a page depends on localStorage-generated ids, do not use dynamic file-based routes for the deployed URL.
 
 ## Verification Checklist
 
@@ -129,3 +145,4 @@ Use this minimum checklist after each update:
 7. If deploying to GitHub Pages:
    - inspect `out`
    - confirm subpages are directory routes, not only flat `.html` files
+8. Confirm all clickable task-detail and spirit-detail links use static exported pages plus query parameters.

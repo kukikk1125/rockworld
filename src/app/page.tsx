@@ -175,7 +175,7 @@ export default function HomePage() {
 
   function openTask(task: Task) {
     setCurrentTask(task.id);
-    router.push(`/tasks/${task.id}`);
+    router.push(`/tasks/view?taskId=${encodeURIComponent(task.id)}`);
   }
 
   function startPlan(plan: PlanPreset) {

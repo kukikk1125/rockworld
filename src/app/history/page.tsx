@@ -201,7 +201,7 @@ export default function HistoryPage() {
 
   function openTask(task: Task) {
     setCurrentTask(task.id);
-    router.push(`/tasks/${task.id}`);
+    router.push(`/tasks/view?taskId=${encodeURIComponent(task.id)}`);
   }
 
   function handleDelete() {

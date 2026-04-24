@@ -68,7 +68,7 @@ export default function PetsPage() {
             return (
               <Link
                 key={spirit.id}
-                href={`/spirits/${spirit.id}`}
+                href={`/spirits/view?spiritId=${encodeURIComponent(spirit.id)}`}
                 className="block transition-transform hover:-translate-y-1"
               >
                 <Card className={`p-2 text-center ${owned ? "border-emerald-200 bg-emerald-50/60" : "bg-white/90"}`}>
