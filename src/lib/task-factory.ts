@@ -1,42 +1,70 @@
-import presets from "@/data/petPresets.json";
-import { hydrateTask } from "@/lib/calculations";
+import planPresets from "@/data/planPresets.json";
+import spiritPresets from "@/data/petPresets.json";
 import { createId } from "@/lib/utils";
-import { PetPreset, Task, TaskMode } from "@/types";
+import { PlanPreset, Spirit, Task, TaskSpiritRecord } from "@/types";
 
-export const petPresets = presets as PetPreset[];
+export const spiritCatalog = spiritPresets as Spirit[];
+export const plans = planPresets as PlanPreset[];
 
-export function createTaskFromPreset(preset?: PetPreset, overrides?: Partial<Task>): Task {
+export function getSpiritById(spiritId: string) {
+  return spiritCatalog.find((item) => item.id === spiritId);
+}
+
+export function getSpiritByName(name: string) {
+  return spiritCatalog.find((item) => item.name === name);
+}
+
+export function getSpiritsByIds(spiritIds: string[]) {
+  return spiritIds
+    .map((spiritId) => getSpiritById(spiritId))
+    .filter((item): item is Spirit => Boolean(item));
+}
+
+export function getPlanById(planId: string) {
+  return plans.find((item) => item.id === planId);
+}
+
+export function buildDirectedPlan(spirit: Spirit): PlanPreset {
+  return {
+    id: `directed-${spirit.id}`,
+    planName: `${spirit.name}定向刷取`,
+    planMode: "定向果实法",
+    fruitRecipe: `${spirit.name}果实`,
+    description: `使用 ${spirit.name} 果实进行定向刷取。`,
+    targetSpiritIds: [spirit.id],
+    image: spirit.image,
+    isDirected: false,
+  };
+}
+
+function createSpiritRecords(spiritIds: string[]): TaskSpiritRecord[] {
+  return spiritIds.map((spiritId) => ({
+    spiritId,
+    pollutionCount: 0,
+    normalCount: 0,
+    currentShinyCount: 0,
+  }));
+}
+
+export function createTaskFromPlan(
+  plan: PlanPreset,
+  overrides?: Partial<Task>,
+): Task {
   const now = new Date().toISOString();
-  const mode = overrides?.mode ?? preset?.recommendedMode ?? ("定向单刷法" as TaskMode);
 
-  return hydrateTask({
+  return {
     id: overrides?.id ?? createId(),
-    petName: overrides?.petName ?? preset?.petName ?? "",
-    petType: overrides?.petType ?? preset?.petType ?? "常驻",
-    familyOrType: overrides?.familyOrType ?? preset?.familyOrType ?? "",
-    mode,
-    aPet: overrides?.aPet ?? preset?.aPet ?? "",
-    bPet: overrides?.bPet ?? preset?.bPet ?? "",
-    aCaught: overrides?.aCaught ?? 0,
-    bCaught: overrides?.bCaught ?? 0,
-    cycleRounds: overrides?.cycleRounds ?? 0,
-    currentCycleTarget: overrides?.currentCycleTarget ?? (mode === "3×3混抓法" ? "A" : undefined),
-    shieldBreakCount: overrides?.shieldBreakCount ?? 0,
-    pityRemaining: 80,
-    isInShelter: overrides?.isInShelter ?? false,
-    hasFruit: overrides?.hasFruit ?? true,
-    normalCaughtCount: overrides?.normalCaughtCount ?? 0,
-    estimatedNormalRemaining: 560,
-    estimatedBallCost: 80,
-    lastSwitchAt: overrides?.lastSwitchAt,
-    shinyStatus: overrides?.shinyStatus ?? "未获取",
-    spawnLocation: overrides?.spawnLocation ?? preset?.spawnLocation ?? "",
-    fruitInfo: overrides?.fruitInfo ?? preset?.fruitInfo ?? "",
-    image: overrides?.image ?? preset?.image ?? "",
+    taskName: overrides?.taskName ?? plan.planName,
+    planId: overrides?.planId ?? plan.id,
+    planName: overrides?.planName ?? plan.planName,
+    mode: overrides?.mode ?? plan.planMode,
+    fruitRecipe: overrides?.fruitRecipe ?? plan.fruitRecipe,
+    targetSpiritIds: overrides?.targetSpiritIds ?? [...plan.targetSpiritIds],
+    spiritRecords:
+      overrides?.spiritRecords ?? createSpiritRecords(plan.targetSpiritIds),
+    ballUsage: overrides?.ballUsage ?? 0,
+    hasStarted: overrides?.hasStarted ?? false,
     createdAt: overrides?.createdAt ?? now,
     updatedAt: overrides?.updatedAt ?? now,
-    completed: overrides?.completed ?? false,
-    probabilityMarked: overrides?.probabilityMarked ?? false,
-    actionHistory: overrides?.actionHistory ?? [],
-  });
+  };
 }

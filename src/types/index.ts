@@ -1,55 +1,105 @@
-export type PetType = "常驻" | "赛季限定" | "战令/活动";
-export type TaskMode = "定向单刷法" | "3×3混抓法" | "无需刷取";
-export type ShinyStatus = "未获取" | "概率获取" | "保底获取";
-export type CycleTarget = "A" | "B";
+export type TaskMode = "定向果实法" | "3×3混抓法";
 
-export interface PetPreset {
-  petName: string;
-  petType: PetType;
-  familyOrType: string;
-  recommendedMode: TaskMode;
-  aPet: string;
-  bPet: string;
-  spawnLocation: string;
-  fruitInfo: string;
-  image: string;
+export interface Spirit {
+  id: string;
+  name: string;
+  image?: string;
+  tags?: string[];
+  createdAt?: string;
 }
 
-export type ActionType = "shield" | "normal";
+export interface PlanPreset {
+  id: string;
+  planName: string;
+  planMode: TaskMode;
+  fruitRecipe: string;
+  description: string;
+  targetSpiritIds: string[];
+  image?: string;
+  isDirected?: boolean;
+}
+
+export interface SpiritCardLastAction {
+  id: string;
+  type: "pollution" | "normal" | "shiny";
+  createdAt: string;
+  previousPollutionCount: number;
+  previousNormalCount: number;
+  previousCurrentShinyCount: number;
+  archiveRecordId?: string;
+}
+
+export interface TaskSpiritRecord {
+  spiritId: string;
+  pollutionCount: number;
+  normalCount: number;
+  currentShinyCount: number;
+  lastAction?: SpiritCardLastAction;
+}
 
 export interface Task {
   id: string;
-  petName: string;
-  petType: PetType;
-  familyOrType: string;
+  taskName: string;
+  planId: string;
+  planName: string;
   mode: TaskMode;
-  aPet?: string;
-  bPet?: string;
-  aCaught?: number;
-  bCaught?: number;
-  cycleRounds?: number;
-  currentCycleTarget?: CycleTarget;
-  shieldBreakCount: number;
-  pityRemaining: number;
-  isInShelter: boolean;
-  hasFruit: boolean;
-  normalCaughtCount: number;
-  estimatedNormalRemaining: number;
-  estimatedBallCost: number;
-  lastSwitchAt?: string;
-  shinyStatus: ShinyStatus;
-  spawnLocation?: string;
-  fruitInfo?: string;
-  image?: string;
+  fruitRecipe: string;
+  targetSpiritIds: string[];
+  spiritRecords: TaskSpiritRecord[];
+  ballUsage: number;
+  hasStarted: boolean;
   createdAt: string;
   updatedAt: string;
-  completed: boolean;
-  probabilityMarked?: boolean;
-  actionHistory: ActionType[];
+}
+
+export type ShinyArchiveSourceType = "target" | "unexpected";
+
+export interface ShinyArchiveRecord {
+  id: string;
+  taskId: string;
+  taskName: string;
+  planId: string;
+  planName: string;
+  spiritId: string;
+  spiritName: string;
+  spiritImage?: string;
+  createdAt: string;
+  sourceType: ShinyArchiveSourceType;
+  isTargetSpirit: boolean;
+  clickable: boolean;
+  snapshot: {
+    pollutionCount: number;
+    normalCount: number;
+  };
+}
+
+export interface SpiritTaskSummary {
+  taskId: string;
+  taskName: string;
+  planId: string;
+  planName: string;
+  mode: TaskMode;
+  pollutionCount: number;
+  normalCount: number;
+  shinyCount: number;
+  updatedAt: string;
+}
+
+export interface SpiritSummary {
+  spirit: Spirit;
+  pollutionCount: number;
+  normalCount: number;
+  shinyCount: number;
+  latestShinyAt?: string;
+  tasks: SpiritTaskSummary[];
 }
 
 export interface AppStorage {
   tasks: Task[];
+  spirits: Spirit[];
+  shinyArchiveRecords: ShinyArchiveRecord[];
   currentTaskId?: string;
   theme?: "light" | "dark";
 }
+
+export type PetPreset = Spirit;

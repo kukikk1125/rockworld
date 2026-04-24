@@ -1,0 +1,77 @@
+[
+  {
+    "id": "mix-illusion",
+    "planName": "幻系方案",
+    "planMode": "3×3混抓法",
+    "fruitRecipe": "仪使者果实 + 哭哭菇果实",
+    "description": "3×3 混抓配方，概率出异色：粉星仔、月牙雪熊。",
+    "targetSpiritIds": ["fenxingzi", "yueyaxuexiong"],
+    "image": "/pets/yise-fenxingzi.png"
+  },
+  {
+    "id": "mix-electric",
+    "planName": "电系方案",
+    "planMode": "3×3混抓法",
+    "fruitRecipe": "拉特果实 + 电咩咩果实",
+    "description": "3×3 混抓配方，概率出异色：粉粉星、拉特、双灯鱼。",
+    "targetSpiritIds": ["fenfenxing", "late", "shuangdengyu"],
+    "image": "/pets/yise-shuangdengyu.png"
+  },
+  {
+    "id": "mix-fire",
+    "planName": "火系方案",
+    "planMode": "3×3混抓法",
+    "fruitRecipe": "治愈兔果实 + 火红马果实",
+    "description": "3×3 混抓配方，概率出异色：治愈兔、火红马、燃薪虫、贝瑟。",
+    "targetSpiritIds": ["zhiyutu", "huohongma", "ranxinchong", "beise"],
+    "image": "/pets/yise-ranxinchong.png"
+  },
+  {
+    "id": "mix-ghost",
+    "planName": "幽系方案",
+    "planMode": "3×3混抓法",
+    "fruitRecipe": "幽影树果实 + 小灵菇果实",
+    "description": "3×3 混抓配方，概率出异色：空空颅。",
+    "targetSpiritIds": ["kongkonglu"],
+    "image": "/pets/yise-kongkonglu.png"
+  },
+  {
+    "id": "mix-light",
+    "planName": "光系方案",
+    "planMode": "3×3混抓法",
+    "fruitRecipe": "疾光兽果实 + 绒仙子果实",
+    "description": "3×3 混抓配方，概率出异色：疾光兽、绒仙子、嗜光嗡嗡。",
+    "targetSpiritIds": ["jiguangshou", "rongxianzi", "shiguangwengweng"],
+    "image": "/pets/yise-shiguangwengweng.png"
+  },
+  {
+    "id": "directed",
+    "planName": "定向果实法",
+    "planMode": "定向果实法",
+    "fruitRecipe": "使用对应精灵果实定向抓取",
+    "description": "所有精灵都可以通过对应精灵果实进行抓取异色。",
+    "targetSpiritIds": [
+      "beise",
+      "daermaodou",
+      "emolang",
+      "fenfenxing",
+      "fenxingzi",
+      "gelanqiu",
+      "huhuzhu",
+      "jiguangshou",
+      "jixiefangfang",
+      "kongkonglu",
+      "late",
+      "qilihua",
+      "ranxinchong",
+      "rongxianzi",
+      "shiguangwengweng",
+      "shuangdengyu",
+      "yueyaxuexiong",
+      "zhiyutu",
+      "huohongma"
+    ],
+    "image": "/pets/yise-fenfenxing.png",
+    "isDirected": true
+  }
+]

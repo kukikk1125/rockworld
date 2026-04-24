@@ -13,6 +13,7 @@ interface ConfirmDialogProps {
   confirmVariant?: "default" | "secondary" | "outline" | "destructive" | "ghost";
   onConfirm: () => void;
   onCancel: () => void;
+  children?: React.ReactNode;
 }
 
 export function ConfirmDialog({
@@ -25,6 +26,7 @@ export function ConfirmDialog({
   confirmVariant = "destructive",
   onConfirm,
   onCancel,
+  children,
 }: ConfirmDialogProps) {
   if (!open) return null;
 
@@ -33,6 +35,7 @@ export function ConfirmDialog({
       <Card className="w-full max-w-md border-border/80 bg-white p-6 shadow-lg">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+        {children && <div className="mt-4">{children}</div>}
         <div className="mt-6 flex justify-end gap-3">
           {!hideCancel && (
             <Button variant="outline" onClick={onCancel}>

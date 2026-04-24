@@ -1,4 +1,4 @@
-import { TaskDetailClient } from "@/components/tasks/task-detail-client";
+import { PlanRecordClient } from "@/components/plans/plan-record-client";
 import { PageShell } from "@/components/ui/page-shell";
 
 export function generateStaticParams() {
@@ -7,8 +7,8 @@ export function generateStaticParams() {
 
 export default function TaskDetailPage() {
   return (
-    <PageShell title="任务详情">
-      <TaskDetailClient />
+    <PageShell title="任务记录">
+      <PlanRecordClient />
     </PageShell>
   );
 }

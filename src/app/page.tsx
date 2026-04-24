@@ -2,182 +2,327 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PetImage } from "@/components/tasks/pet-image";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageShell } from "@/components/ui/page-shell";
-import { createTaskFromPreset, petPresets } from "@/lib/task-factory";
-import { getCurrentTask, getTasks, saveTask, setCurrentTask } from "@/lib/storage";
-import { PetPreset, Task } from "@/types";
+import { PetImage } from "@/components/tasks/pet-image";
+import { buildDirectedPlan, createTaskFromPlan, getSpiritsByIds, plans, spiritCatalog } from "@/lib/task-factory";
+import { getOwnedSpiritIds, getTaskArchiveCount, getTotalNormalCount, getTotalPollutionCount, hasTaskData } from "@/lib/calculations";
+import { deleteTask, getTasks, saveTask, setCurrentTask } from "@/lib/storage";
+import { PlanPreset, Spirit, Task } from "@/types";
 
-export default function HomePage() {
-  const router = useRouter();
-  const [currentTask, setCurrentTaskState] = useState<Task>();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<PetPreset | null>(null);
-
-  useEffect(() => {
-    setCurrentTaskState(getCurrentTask());
-    setTasks(getTasks());
-  }, []);
-
-  const activeTasks = useMemo(() => tasks.filter((task) => !task.completed), [tasks]);
-  const completedCountByPet = useMemo(() => tasks.reduce<Record<string, number>>((acc, task) => {
-    if (!task.completed) return acc;
-    acc[task.petName] = (acc[task.petName] ?? 0) + 1;
-    return acc;
-  }, {}), [tasks]);
-  const obtainedTotal = useMemo(() => Object.values(completedCountByPet).reduce((sum, count) => sum + count, 0), [completedCountByPet]);
-
-  function handleConfirmPet() {
-    if (!selectedPreset) return;
-    const existing = activeTasks.find((task) => task.petName === selectedPreset.petName);
-    if (existing) {
-      setCurrentTask(existing.id);
-      setSelectedPreset(null);
-      router.push(`/tasks/${existing.id}`);
-      return;
-    }
-
-    const nextTask = createTaskFromPreset(selectedPreset);
-    saveTask(nextTask);
-    setCurrentTask(nextTask.id);
-    setSelectedPreset(null);
-    router.push(`/tasks/${nextTask.id}`);
-  }
+function PlanTargets({ spiritIds }: { spiritIds: string[] }) {
+  const spirits = getSpiritsByIds(spiritIds);
+  const display = spirits.slice(0, 4);
 
   return (
-    <PageShell title="异色精灵记录台">
-      {!currentTask ? (
-        <div className="space-y-2">
-          <Card className="bg-gradient-to-br from-white via-amber-50 to-rose-50 p-4 text-center">
-            <h3 className="text-lg font-black">还没有进行中的任务</h3>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">从下方选择一个异色精灵开始记录</p>
-            <Button size="lg" className="mt-3 h-9 w-full rounded-xl text-xs" onClick={() => router.push("/history")}>
-              查看历史记录
-            </Button>
-          </Card>
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-black">快速选择</h2>
-            <Badge className="bg-white/75 text-[9px] text-foreground">已获取 {obtainedTotal}</Badge>
-          </div>
-          <PetPickerGrid presets={petPresets} completedCountByPet={completedCountByPet} onPick={setSelectedPreset} />
+    <div className="flex flex-wrap gap-3">
+      {display.map((spirit) => (
+        <div key={spirit.id} className="flex flex-col items-center gap-1">
+          <PetImage
+            src={spirit.image}
+            alt={spirit.name}
+            className="h-14 w-14 rounded-full border-2 border-amber-200"
+          />
+          <span className="max-w-[64px] text-center text-[10px] font-medium">
+            {spirit.name}
+          </span>
         </div>
-      ) : (
-        <div className="space-y-2">
-          <Card className="overflow-hidden bg-gradient-to-br from-white via-rose-50 to-amber-50 p-3">
-            <div className="grid grid-cols-[64px_1fr] gap-2.5">
-              <PetImage src={currentTask.image} alt={currentTask.petName} className="aspect-square w-full rounded-[16px]" priority />
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap gap-1">
-                  <Badge className="bg-rose-100 text-[9px] text-rose-700">{currentTask.petType}</Badge>
-                  <Badge className="bg-amber-100 text-[9px] text-amber-700">{currentTask.mode}</Badge>
-                  <Badge className="bg-emerald-100 text-[9px] text-emerald-700">{currentTask.shinyStatus}</Badge>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black leading-tight">{currentTask.petName}</h3>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">{currentTask.familyOrType}</p>
-                </div>
-                <div className="grid grid-cols-4 gap-1">
-                  <MiniMetric label="破盾" value={`${currentTask.shieldBreakCount}`} />
-                  <MiniMetric label="保底" value={`${currentTask.pityRemaining}`} />
-                  <MiniMetric label="普通" value={`${currentTask.normalCaughtCount}`} />
-                  <MiniMetric label="球耗" value={`${currentTask.estimatedBallCost}`} />
-                </div>
-              </div>
-            </div>
-            <Button size="lg" className="mt-2.5 h-9 w-full rounded-xl text-xs" onClick={() => { setCurrentTask(currentTask.id); router.push(`/tasks/${currentTask.id}`); }}>
-              进入记录界面
-            </Button>
-          </Card>
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-black">快速选择</h2>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-white/75 text-[9px] text-foreground">进行中 {activeTasks.length}</Badge>
-              <Badge className="bg-emerald-50 text-[9px] text-emerald-700">已获取 {obtainedTotal}</Badge>
-            </div>
+      ))}
+      {spiritIds.length > display.length && (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-amber-300 bg-white text-[10px] font-bold text-amber-700">
+            +{spiritIds.length - display.length}
           </div>
-          <PetPickerGrid presets={petPresets} completedCountByPet={completedCountByPet} onPick={setSelectedPreset} />
+          <span className="text-[10px] font-medium text-amber-700">更多</span>
         </div>
       )}
-
-      {selectedPreset && (
-        <PetConfirmDialog
-          preset={selectedPreset}
-          hasActiveTask={activeTasks.some((task) => task.petName === selectedPreset.petName)}
-          obtainedCount={completedCountByPet[selectedPreset.petName] ?? 0}
-          onConfirm={handleConfirmPet}
-          onCancel={() => setSelectedPreset(null)}
-        />
-      )}
-    </PageShell>
-  );
-}
-
-function PetPickerGrid({ presets, completedCountByPet, onPick }: { presets: PetPreset[]; completedCountByPet: Record<string, number>; onPick: (preset: PetPreset) => void; }) {
-  return (
-    <div className="grid grid-cols-4 gap-4 p-2">
-      {presets.map((preset) => {
-        const obtainedCount = completedCountByPet[preset.petName] ?? 0;
-        const isObtained = obtainedCount > 0;
-        
-        return (
-          <button key={preset.petName} type="button" onClick={() => onPick(preset)} className="transition-transform hover:-translate-y-1 hover:scale-105">
-            <div className="flex flex-col items-center gap-1">
-              <div className="relative">
-                <PetImage src={preset.image} alt={preset.petName} className="aspect-square w-16 h-16 rounded-full" />
-                {isObtained && <span className="absolute -right-2 -top-2 flex min-w-6 items-center justify-center rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-black text-white shadow-md">{obtainedCount}</span>}
-              </div>
-              <p className="line-clamp-1 text-[9px] font-bold text-gray-700 text-center w-full">{preset.petName}</p>
-            </div>
-          </button>
-        );
-      })}
     </div>
   );
 }
 
-function PetConfirmDialog({ preset, hasActiveTask, obtainedCount, onConfirm, onCancel }: { preset: PetPreset; hasActiveTask: boolean; obtainedCount: number; onConfirm: () => void; onCancel: () => void; }) {
+function ActiveTaskCard({
+  task,
+  onSelect,
+  onDelete,
+}: {
+  task: Task;
+  onSelect: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
-      <Card className="w-full max-w-xs border-border/80 bg-white p-5 shadow-lg">
-        <div className="flex flex-col items-center gap-3">
-          <PetImage src={preset.image} alt={preset.petName} className="aspect-square w-20 rounded-[20px]" />
-          <div className="text-center">
-            <h3 className="text-base font-black">{preset.petName}</h3>
-            <div className="mt-1 flex flex-wrap justify-center gap-1">
-              <Badge className="bg-rose-100 text-[9px] text-rose-700">{preset.petType}</Badge>
-              <Badge className="bg-amber-100 text-[9px] text-amber-700">{preset.recommendedMode}</Badge>
-              {obtainedCount > 0 && <Badge className="bg-emerald-100 text-[9px] text-emerald-700">已获取 {obtainedCount}</Badge>}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(task)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(task);
+        }
+      }}
+      className="w-full text-left transition-transform hover:scale-[1.01]"
+    >
+      <Card className="overflow-hidden border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-0">
+        <div className="grid gap-3 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-emerald-100 text-emerald-700">进行中</Badge>
+                <Badge className="bg-amber-100 text-amber-700">{task.mode}</Badge>
+              </div>
+              <div>
+                <h3 className="text-[18px] font-black text-emerald-950">{task.taskName}</h3>
+                <p className="mt-1 text-[13px] text-muted-foreground">{task.fruitRecipe}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(task);
+              }}
+              className="text-xs text-red-500 hover:text-red-700"
+            >
+              删除
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-2xl bg-white/80 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">污染</div>
+              <div className="text-sm font-black text-rose-600">{getTotalPollutionCount(task)}</div>
+            </div>
+            <div className="rounded-2xl bg-white/80 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">原色</div>
+              <div className="text-sm font-black text-sky-600">{getTotalNormalCount(task)}</div>
+            </div>
+            <div className="rounded-2xl bg-white/80 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">已存档事件</div>
+              <div className="text-sm font-black text-emerald-600">{getTaskArchiveCount(task.id)}</div>
             </div>
           </div>
-        </div>
-        <div className="mt-4 space-y-2 text-[11px] text-muted-foreground">
-          <InfoRow label="系别" value={preset.familyOrType} />
-          <InfoRow label="抓取点位" value={preset.spawnLocation} />
-          <InfoRow label="精灵果实" value={preset.fruitInfo} />
-          {preset.recommendedMode === "3×3混抓法" && (
-            <>
-              <InfoRow label="A 系搭配" value={preset.aPet} />
-              <InfoRow label="B 系搭配" value={preset.bPet} />
-            </>
-          )}
-        </div>
-        <div className="mt-5 flex gap-2">
-          <Button variant="outline" className="h-9 flex-1 rounded-xl text-xs" onClick={onCancel}>取消</Button>
-          <Button className="h-9 flex-1 rounded-xl text-xs" onClick={onConfirm}>{hasActiveTask ? "进入任务" : "开始记录"}</Button>
         </div>
       </Card>
     </div>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  if (!value) return null;
-  return <div className="flex gap-2"><span className="shrink-0 font-semibold text-foreground">{label}</span><span>{value}</span></div>;
+function PlanCard({
+  plan,
+  onSelect,
+  activeTask,
+}: {
+  plan: PlanPreset;
+  onSelect: (plan: PlanPreset) => void;
+  activeTask?: Task;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(plan)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(plan);
+        }
+      }}
+      className="w-full text-left transition-transform hover:scale-[1.01]"
+    >
+      <Card className="overflow-hidden bg-white/90 p-0">
+        <div className="grid gap-4 p-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge className={plan.isDirected ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}>
+              {plan.isDirected ? "定向入口" : "3×3混抓"}
+            </Badge>
+            <Badge className="bg-slate-100 text-slate-700">{plan.planMode}</Badge>
+            {activeTask && <Badge className="bg-emerald-100 text-emerald-700">已有记录</Badge>}
+          </div>
+
+          <div>
+            <h3 className="text-[18px] font-black">{plan.planName}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{plan.fruitRecipe}</p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{plan.description}</p>
+          </div>
+
+          <PlanTargets spiritIds={plan.targetSpiritIds} />
+        </div>
+      </Card>
+    </div>
+  );
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-[12px] bg-white/75 p-1 text-center"><div className="text-[8px] text-muted-foreground">{label}</div><div className="text-xs font-black">{value}</div></div>;
+export default function HomePage() {
+  const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [directedOpen, setDirectedOpen] = useState(false);
+
+  useEffect(() => {
+    setTasks(getTasks());
+  }, []);
+
+  const activeTasks = useMemo(() => tasks.filter((task) => hasTaskData(task)), [tasks]);
+  const ownedCount = useMemo(() => getOwnedSpiritIds().size, [tasks]);
+  const directedPlan = useMemo(() => plans.find((item) => item.isDirected), []);
+  const mixedPlans = useMemo(() => plans.filter((item) => !item.isDirected), []);
+
+  function refreshTasks() {
+    setTasks(getTasks());
+  }
+
+  function openTask(task: Task) {
+    setCurrentTask(task.id);
+    router.push(`/tasks/${task.id}`);
+  }
+
+  function startPlan(plan: PlanPreset) {
+    if (plan.isDirected) {
+      setDirectedOpen(true);
+      return;
+    }
+
+    const existing = tasks.find((task) => task.planId === plan.id);
+    if (existing) {
+      openTask(existing);
+      return;
+    }
+
+    const task = createTaskFromPlan(plan);
+    saveTask(task);
+    openTask(task);
+  }
+
+  function startDirected(spirit: Spirit) {
+    const plan = buildDirectedPlan(spirit);
+    const existing = tasks.find((task) => task.planId === plan.id);
+    if (existing) {
+      setDirectedOpen(false);
+      openTask(existing);
+      return;
+    }
+
+    const task = createTaskFromPlan(plan, {
+      taskName: `${spirit.name}定向刷取`,
+    });
+    saveTask(task);
+    setDirectedOpen(false);
+    openTask(task);
+  }
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    deleteTask(deleteTarget.id);
+    setDeleteTarget(null);
+    refreshTasks();
+  }
+
+  return (
+    <PageShell title="异色精灵记录台">
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black">抓取入口总览</h2>
+          <Badge className="bg-emerald-50 text-emerald-700">已拥有异色 {ownedCount}</Badge>
+        </div>
+
+        {activeTasks.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-emerald-700">进行中任务</h3>
+              <Badge className="bg-emerald-100 text-emerald-700">{activeTasks.length}</Badge>
+            </div>
+            <div className="grid gap-3">
+              {activeTasks.map((task) => (
+                <ActiveTaskCard
+                  key={task.id}
+                  task={task}
+                  onSelect={openTask}
+                  onDelete={setDeleteTarget}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-muted-foreground">选择抓取方案</h3>
+            <Badge className="bg-secondary text-secondary-foreground">首页直接开记</Badge>
+          </div>
+
+          {directedPlan && (
+            <PlanCard
+              plan={directedPlan}
+              activeTask={tasks.find((task) => task.mode === "定向果实法")}
+              onSelect={startPlan}
+            />
+          )}
+
+          <div className="grid gap-3">
+            {mixedPlans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                activeTask={tasks.find((task) => task.planId === plan.id)}
+                onSelect={startPlan}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {directedOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
+          <Card className="w-full max-w-md border-border/80 bg-white p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">选择定向精灵</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  所有精灵都可以通过对应精灵果实进行抓取异色。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDirectedOpen(false)}
+                className="rounded-xl border border-input px-3 py-2 text-sm"
+              >
+                关闭
+              </button>
+            </div>
+
+            <div className="mt-4 grid max-h-[420px] grid-cols-4 gap-3 overflow-y-auto">
+              {spiritCatalog.map((spirit) => (
+                <button
+                  key={spirit.id}
+                  type="button"
+                  onClick={() => startDirected(spirit)}
+                  className="flex flex-col items-center gap-1 rounded-2xl p-2 transition hover:bg-muted/50"
+                >
+                  <PetImage
+                    src={spirit.image}
+                    alt={spirit.name}
+                    className="h-14 w-14 rounded-full border-2 border-amber-200"
+                  />
+                  <span className="text-[10px] font-medium text-center">{spirit.name}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="确认删除任务"
+        description={`确定要删除「${deleteTarget?.taskName ?? ""}」吗？此操作无法撤销。`}
+        confirmText="删除"
+        cancelText="取消"
+        confirmVariant="destructive"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
+    </PageShell>
+  );
 }
