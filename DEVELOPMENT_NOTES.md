@@ -77,6 +77,23 @@ Every time features are updated, we should check this file first and re-run the 
   - use `npm run dev` for interactive verification
   - if previewing exported output, serve the `out` directory with a static server instead of `next start`
 
+### 7. GitHub Pages static route 404 on subpages
+
+- Symptom:
+  - homepage opens, but clicking routes such as `/history` shows `404`
+  - browser console reports `Failed to load resource: the server responded with a status of 404`
+- Root cause:
+  - static export generated flat files like `history.html`, while app navigation linked to `/history`
+  - GitHub Pages serves directory-style routes more reliably for exported Next.js apps under a subpath
+- Fix:
+  - enable `trailingSlash: true` in production export config
+  - after every route change, inspect the exported `out` directory and confirm pages are emitted as `route/index.html`
+  - for GitHub Pages verification, explicitly click:
+    - `/rockworld/`
+    - `/rockworld/history/`
+    - `/rockworld/pets/`
+    - `/rockworld/settings/`
+
 ## Update Rules
 
 After every feature update:
@@ -87,6 +104,7 @@ After every feature update:
 4. Verify the actual browser entry URL, not just terminal success output.
 5. If an old port behaves strangely, start a fresh dev server on a new port and verify again.
 6. If a new issue is found, append it to this file before closing the task.
+7. If the site deploys to GitHub Pages, verify the exported route structure matches the deployed URLs.
 
 ## Verification Checklist
 
@@ -108,3 +126,6 @@ Use this minimum checklist after each update:
 6. If the browser shows black screen or client-side exception:
    - suspect stale dev process first
    - then inspect recent layout / dialog / storage changes
+7. If deploying to GitHub Pages:
+   - inspect `out`
+   - confirm subpages are directory routes, not only flat `.html` files

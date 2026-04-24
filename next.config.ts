@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   ...(isProd && {
     output: "export",
     basePath: "/rockworld",
+    trailingSlash: true,
   }),
   images: {
     unoptimized: true,
