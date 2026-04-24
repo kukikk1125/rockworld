@@ -6,16 +6,16 @@
   { "id": "fenxingzi", "name": "粉星仔", "image": "/pets/yise-fenxingzi.png", "tags": ["幻系", "异色"] },
   { "id": "gelanqiu", "name": "格兰球", "image": "/pets/yise-gelanqiu.png", "tags": ["定向", "异色"] },
   { "id": "huhuzhu", "name": "呼呼猪", "image": "/pets/yise-huhuzhu.png", "tags": ["定向", "异色"] },
-  { "id": "jiguangshou", "name": "疾光兽", "tags": ["光系", "异色"] },
+  { "id": "jiguangshou", "name": "疾光兽", "image": "/pets/yise-jiguangshou.png", "tags": ["光系", "异色"] },
   { "id": "jixiefangfang", "name": "机械方方", "image": "/pets/yise-jixiefangfang.png", "tags": ["定向", "异色"] },
   { "id": "kongkonglu", "name": "空空颅", "image": "/pets/yise-kongkonglu.png", "tags": ["幽系", "异色"] },
   { "id": "late", "name": "拉特", "image": "/pets/yise-kula.png", "tags": ["电系", "异色"] },
   { "id": "qilihua", "name": "奇丽花", "image": "/pets/yise-qilihua.png", "tags": ["定向", "异色"] },
   { "id": "ranxinchong", "name": "燃薪虫", "image": "/pets/yise-ranxinchong.png", "tags": ["火系", "异色"] },
-  { "id": "rongxianzi", "name": "绒仙子", "tags": ["光系", "异色"] },
+  { "id": "rongxianzi", "name": "绒仙子", "image": "/pets/yise-rongxianzi.png", "tags": ["光系", "异色"] },
   { "id": "shiguangwengweng", "name": "嗜光嗡嗡", "image": "/pets/yise-shiguangwengweng.png", "tags": ["光系", "异色"] },
   { "id": "shuangdengyu", "name": "双灯鱼", "image": "/pets/yise-shuangdengyu.png", "tags": ["电系", "异色"] },
   { "id": "yueyaxuexiong", "name": "月牙雪熊", "image": "/pets/yise-yueyaxuexiong.png", "tags": ["幻系", "异色"] },
   { "id": "zhiyutu", "name": "治愈兔", "image": "/pets/yise-zhiyutu.png", "tags": ["火系", "异色"] },
-  { "id": "huohongma", "name": "火红马", "tags": ["火系", "异色"] }
+  { "id": "huohongma", "name": "火红马", "image": "/pets/yise-huohongma.png", "tags": ["火系", "异色"] }
 ]

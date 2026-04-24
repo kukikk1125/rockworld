@@ -43,6 +43,7 @@ function createSpiritRecords(spiritIds: string[]): TaskSpiritRecord[] {
     pollutionCount: 0,
     normalCount: 0,
     currentShinyCount: 0,
+    progressMarks: [],
   }));
 }
 

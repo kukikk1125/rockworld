@@ -13,10 +13,21 @@ import {
   addPollutionCount,
   archiveTargetShiny,
   getSpiritSummary,
-  hasTaskData,
+  isTaskInProgress,
 } from "@/lib/calculations";
-import { buildDirectedPlan, createTaskFromPlan, getPlanById, plans } from "@/lib/task-factory";
-import { getTaskById, getTasks, saveShinyArchiveRecord, saveTask, setCurrentTask } from "@/lib/storage";
+import {
+  buildDirectedPlan,
+  createTaskFromPlan,
+  getPlanById,
+  plans,
+} from "@/lib/task-factory";
+import {
+  getTaskById,
+  getTasks,
+  saveShinyArchiveRecord,
+  saveTask,
+  setCurrentTask,
+} from "@/lib/storage";
 import { formatDateTime } from "@/lib/utils";
 import { Task } from "@/types";
 
@@ -44,7 +55,7 @@ export function SpiritDetailClient() {
   }, [summary]);
 
   const activeTasks = useMemo(
-    () => getTasks().filter((task) => hasTaskData(task)),
+    () => getTasks().filter((task) => isTaskInProgress(task)),
     [refreshKey],
   );
 
@@ -94,12 +105,12 @@ export function SpiritDetailClient() {
     const plan = matchedPlan?.isDirected ? buildDirectedPlan(summary.spirit) : matchedPlan;
     if (!plan) return;
 
-      const existing = getTasks().find((task) => task.planId === plan.id);
-      if (existing) {
-        setCurrentTask(existing.id);
-        router.push(`/tasks/view?taskId=${encodeURIComponent(existing.id)}`);
-        return;
-      }
+    const existing = getTasks().find((task) => task.planId === plan.id);
+    if (existing) {
+      setCurrentTask(existing.id);
+      router.push(`/tasks/view?taskId=${encodeURIComponent(existing.id)}`);
+      return;
+    }
 
     const nextTask = createTaskFromPlan(plan, {
       taskName: plan.isDirected ? `${summary.spirit.name}定向刷取` : plan.planName,
@@ -112,7 +123,13 @@ export function SpiritDetailClient() {
   if (!summary) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-sm text-muted-foreground">未找到该精灵的详情数据。</p>
+        <p className="text-sm text-muted-foreground">没有找到该精灵的详情数据。</p>
+        <div className="mt-4 flex justify-center gap-3">
+          <Button variant="outline" onClick={() => router.push("/pets")}>
+            返回图鉴
+          </Button>
+          <Button onClick={() => router.push("/")}>返回首页</Button>
+        </div>
       </Card>
     );
   }
@@ -130,7 +147,9 @@ export function SpiritDetailClient() {
             <div className="flex-1">
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-emerald-100 text-emerald-700">精灵详情</Badge>
-                {summary.shinyCount > 0 && <Badge className="bg-primary/10 text-primary">已拥有</Badge>}
+                {summary.shinyCount > 0 && (
+                  <Badge className="bg-primary/10 text-primary">已拥有</Badge>
+                )}
               </div>
               <h2 className="mt-2 text-2xl font-black">{summary.spirit.name}</h2>
               <p className="mt-1 text-sm text-muted-foreground">总异色：{summary.shinyCount}</p>
@@ -143,14 +162,14 @@ export function SpiritDetailClient() {
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <Button className="bg-rose-500 text-white hover:bg-rose-600" onClick={() => handleQuickAction("pollution")}>
+            <Button variant="outline" onClick={() => handleQuickAction("pollution")}>
               污染 +1
             </Button>
-            <Button className="bg-sky-500 text-white hover:bg-sky-600" onClick={() => handleQuickAction("normal")}>
+            <Button variant="outline" onClick={() => handleQuickAction("normal")}>
               原色 +1
             </Button>
-            <Button className="bg-emerald-500 text-white hover:bg-emerald-600" onClick={() => handleQuickAction("shiny")}>
-              异色 +1
+            <Button variant="secondary" onClick={() => handleQuickAction("shiny")}>
+              记录异色
             </Button>
           </div>
         </Card>
@@ -208,7 +227,7 @@ export function SpiritDetailClient() {
                   </Badge>
                 </div>
                 <Button className="mt-4 w-full" onClick={() => restartFromPlan(plan.id)}>
-                  重新记录
+                  回到任务页记录
                 </Button>
               </div>
             ))}
@@ -236,7 +255,7 @@ export function SpiritDetailClient() {
         open={!!notice}
         title="提示"
         description={notice ?? ""}
-        confirmText="我知道了"
+        confirmText="知道了"
         hideCancel
         confirmVariant="default"
         onCancel={() => setNotice(null)}

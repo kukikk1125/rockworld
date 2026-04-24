@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PetImage } from "@/components/tasks/pet-image";
 import { SpiritPickerDialog } from "@/components/tasks/spirit-picker-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   archiveTargetShiny,
   createUnexpectedShinyArchiveRecord,
   getSpiritGlobalShinyCount,
+  getTaskSpiritMarks,
   getTaskSpiritProgress,
   getTaskSpiritRecords,
   removeArchiveRecord,
@@ -27,33 +28,62 @@ import {
   setCurrentTask,
   upsertSpirit,
 } from "@/lib/storage";
-import { Spirit, Task, TaskSpiritRecord } from "@/types";
+import { ProgressMarkType, Spirit, Task, TaskSpiritRecord } from "@/types";
 
-function ProgressGrid({ record }: { record: TaskSpiritRecord }) {
-  const pollution = record.pollutionCount;
-  const normal = record.normalCount;
-  const total = Math.min(80, pollution + normal);
+type CardFeedback =
+  | {
+      spiritId: string;
+      action: "pollution" | "normal";
+      flashIndex: number;
+      notice: string;
+    }
+  | {
+      spiritId: string;
+      action: "shiny" | "undo";
+      notice: string;
+    };
+
+function ProgressGrid({
+  record,
+  feedback,
+}: {
+  record: TaskSpiritRecord;
+  feedback: CardFeedback | null;
+}) {
+  const marks = getTaskSpiritMarks(record);
 
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-10 gap-1.5">
         {Array.from({ length: 80 }).map((_, index) => {
-          let className = "bg-white/90";
-          if (index < pollution) className = "bg-rose-500";
-          if (index >= pollution && index < total) className = "bg-sky-500";
+          const mark = marks[index];
+          const className =
+            mark === "pollution"
+              ? "bg-rose-500"
+              : mark === "normal"
+                ? "bg-sky-500"
+                : "bg-white/90";
+          const isFlash =
+            feedback?.spiritId === record.spiritId &&
+            "flashIndex" in feedback &&
+            feedback.flashIndex === index;
 
           return (
             <span
               key={index}
-              className={`h-3 rounded-[4px] border border-white/60 ${className}`}
+              className={`h-3 rounded-[4px] border border-white/60 transition-all duration-300 ${className} ${
+                isFlash ? "scale-125 ring-2 ring-amber-300" : ""
+              }`}
             />
           );
         })}
       </div>
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>保底进度 {pollution + normal}/80</span>
-        {pollution + normal >= 80 && (
-          <span className="font-bold text-emerald-600">已达保底</span>
+      <div className="flex items-center justify-between">
+        <div className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
+          当前进度 {marks.length}/80
+        </div>
+        {marks.length >= 80 && (
+          <span className="text-[11px] font-bold text-emerald-600">已到保底</span>
         )}
       </div>
     </div>
@@ -64,6 +94,7 @@ function SpiritRecordCard({
   spirit,
   record,
   totalShinyCount,
+  feedback,
   onPollution,
   onNormal,
   onShiny,
@@ -72,6 +103,7 @@ function SpiritRecordCard({
   spirit?: Spirit;
   record: TaskSpiritRecord;
   totalShinyCount: number;
+  feedback: CardFeedback | null;
   onPollution: () => void;
   onNormal: () => void;
   onShiny: () => void;
@@ -79,13 +111,16 @@ function SpiritRecordCard({
 }) {
   const progress = getTaskSpiritProgress(record);
   const avatarRing =
-    totalShinyCount > 0 ? "border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" : "border-amber-200";
+    totalShinyCount > 0
+      ? "border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]"
+      : "border-amber-200";
+  const isCurrentFeedback = feedback?.spiritId === record.spiritId ? feedback : null;
 
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-white via-amber-50/70 to-rose-50/60 p-4">
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <div className="relative">
               <PetImage
                 src={spirit?.image}
@@ -100,15 +135,15 @@ function SpiritRecordCard({
             </div>
             <div>
               <div className="flex flex-wrap gap-2">
-                <Badge className="bg-white/80 text-slate-700">进行中</Badge>
+                <Badge className="bg-white/80 text-slate-700">记录中</Badge>
                 {progress >= 80 && (
                   <Badge className="bg-emerald-100 text-emerald-700">保底就绪</Badge>
                 )}
+                {record.currentShinyCount > 0 && (
+                  <Badge className="bg-primary/10 text-primary">本轮异色 {record.currentShinyCount}</Badge>
+                )}
               </div>
               <h3 className="mt-2 text-lg font-black">{spirit?.name ?? record.spiritId}</h3>
-              <p className="text-xs text-muted-foreground">
-                头像角标表示全局累计异色次数，本轮记录仍以当前卡片为准。
-              </p>
             </div>
           </div>
 
@@ -122,7 +157,13 @@ function SpiritRecordCard({
           </button>
         </div>
 
-        <ProgressGrid record={record} />
+        <ProgressGrid record={record} feedback={isCurrentFeedback} />
+
+        {isCurrentFeedback && (
+          <div className="rounded-2xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
+            {isCurrentFeedback.notice}
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-2xl bg-white/80 p-3 text-center">
@@ -139,28 +180,47 @@ function SpiritRecordCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <Button className="bg-rose-500 text-white hover:bg-rose-600" onClick={onPollution}>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            className={`bg-rose-500 text-white hover:bg-rose-600 ${
+              isCurrentFeedback?.action === "pollution" ? "scale-[0.98]" : ""
+            }`}
+            onClick={onPollution}
+          >
             污染 +1
           </Button>
-          <Button className="bg-sky-500 text-white hover:bg-sky-600" onClick={onNormal}>
+          <Button
+            className={`bg-sky-500 text-white hover:bg-sky-600 ${
+              isCurrentFeedback?.action === "normal" ? "scale-[0.98]" : ""
+            }`}
+            onClick={onNormal}
+          >
             原色 +1
           </Button>
-          <Button className="bg-emerald-500 text-white hover:bg-emerald-600" onClick={onShiny}>
-            异色 +1
-          </Button>
         </div>
+
+        <Button
+          size="lg"
+          className={`w-full bg-emerald-500 text-white shadow-[0_10px_24px_rgba(16,185,129,0.28)] hover:bg-emerald-600 ${
+            isCurrentFeedback?.action === "shiny" ? "scale-[0.99]" : ""
+          }`}
+          onClick={onShiny}
+        >
+          确认异色
+        </Button>
       </div>
     </Card>
   );
 }
 
 export function PlanRecordClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [task, setTask] = useState<Task | null>(null);
   const [spirits, setSpirits] = useState<Spirit[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<CardFeedback | null>(null);
 
   const taskId = searchParams.get("taskId") ?? searchParams.get("id") ?? "";
 
@@ -177,6 +237,12 @@ export function PlanRecordClient() {
     const timer = window.setTimeout(() => setToast(null), 2200);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = window.setTimeout(() => setFeedback(null), 900);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
 
   const plan = useMemo(() => (task ? getPlanById(task.planId) : undefined), [task]);
   const targetSpirits = useMemo(
@@ -196,12 +262,32 @@ export function PlanRecordClient() {
 
   function handlePollution(spiritId: string) {
     if (!task) return;
-    persist(addPollutionCount(task, spiritId, 1));
+    const nextTask = addPollutionCount(task, spiritId, 1);
+    const nextRecord = nextTask.spiritRecords.find((item) => item.spiritId === spiritId);
+    persist(nextTask);
+    if (nextRecord?.progressMarks?.length) {
+      setFeedback({
+        spiritId,
+        action: "pollution",
+        flashIndex: nextRecord.progressMarks.length - 1,
+        notice: "已记录：污染 +1",
+      });
+    }
   }
 
   function handleNormal(spiritId: string) {
     if (!task) return;
-    persist(addNormalCount(task, spiritId, 1));
+    const nextTask = addNormalCount(task, spiritId, 1);
+    const nextRecord = nextTask.spiritRecords.find((item) => item.spiritId === spiritId);
+    persist(nextTask);
+    if (nextRecord?.progressMarks?.length) {
+      setFeedback({
+        spiritId,
+        action: "normal",
+        flashIndex: nextRecord.progressMarks.length - 1,
+        notice: "已记录：原色 +1",
+      });
+    }
   }
 
   function handleShiny(record: TaskSpiritRecord) {
@@ -212,7 +298,12 @@ export function PlanRecordClient() {
     const result = archiveTargetShiny(task, spirit);
     saveShinyArchiveRecord(result.archiveRecord);
     persist(result.task);
-    setToast("已存档，已开始新一轮记录");
+    setFeedback({
+      spiritId: record.spiritId,
+      action: "shiny",
+      notice: "已确认异色，当前轮次已存档并自动进入下一轮。",
+    });
+    setToast("异色已存档");
   }
 
   function handleUnexpectedShiny(payload: { spirit: Spirit; created: boolean }) {
@@ -229,7 +320,7 @@ export function PlanRecordClient() {
       updatedAt: new Date().toISOString(),
     });
     setPickerOpen(false);
-    setToast("已存档为方案外异色");
+    setToast("已记录意外异色，仅进入存档，不加入当前卡片区。");
   }
 
   function handleUndo(spiritId: string) {
@@ -239,13 +330,24 @@ export function PlanRecordClient() {
       removeArchiveRecord(result.removedArchiveId);
     }
     persist(result.task);
+    setFeedback({
+      spiritId,
+      action: "undo",
+      notice: "已撤销上一步",
+    });
     setToast("已撤销上一步");
   }
 
   if (!task) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-sm text-muted-foreground">未找到对应任务。</p>
+        <p className="text-sm text-muted-foreground">没有找到对应任务，可能是链接失效或任务已被删除。</p>
+        <div className="mt-4 flex justify-center gap-3">
+          <Button variant="outline" onClick={() => router.push("/")}>
+            返回首页
+          </Button>
+          <Button onClick={() => router.push("/history")}>返回记录页</Button>
+        </div>
       </Card>
     );
   }
@@ -263,40 +365,34 @@ export function PlanRecordClient() {
                 </div>
                 <h2 className="mt-2 text-xl font-black">{task.taskName}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{task.fruitRecipe}</p>
-                {plan?.description && (
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{plan.description}</p>
-                )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-3">
-                {targetSpirits.map((spirit) => (
-                  <div key={spirit.id} className="flex flex-col items-center gap-1">
-                    <PetImage
-                      src={spirit.image}
-                      alt={spirit.name}
-                      className="h-12 w-12 rounded-full border-2 border-amber-200"
-                    />
-                    <span className="max-w-[52px] text-center text-[10px] font-medium">
-                      {spirit.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <Button variant="outline" onClick={() => setPickerOpen(true)}>
-                补记方案外异色
-              </Button>
+            <div className="flex flex-wrap gap-3">
+              {targetSpirits.map((spirit) => (
+                <div key={spirit.id} className="flex flex-col items-center gap-1">
+                  <PetImage
+                    src={spirit.image}
+                    alt={spirit.name}
+                    className="h-12 w-12 rounded-full border-2 border-amber-200"
+                  />
+                  <span className="max-w-[52px] text-center text-[10px] font-medium">
+                    {spirit.name}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </Card>
 
         <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-black">精灵卡片区</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              异色存档后，当前卡片不会消失，而是自动清零并进入下一轮记录。
-            </p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-black">精灵记录区</h3>
+            </div>
+            <Button variant="outline" onClick={() => setPickerOpen(true)}>
+              记录意外异色
+            </Button>
           </div>
 
           <div className="grid gap-3">
@@ -306,6 +402,7 @@ export function PlanRecordClient() {
                 spirit={spirits.find((item) => item.id === record.spiritId)}
                 record={record}
                 totalShinyCount={getSpiritGlobalShinyCount(record.spiritId)}
+                feedback={feedback}
                 onPollution={() => handlePollution(record.spiritId)}
                 onNormal={() => handleNormal(record.spiritId)}
                 onShiny={() => handleShiny(record)}
@@ -326,8 +423,8 @@ export function PlanRecordClient() {
 
       <SpiritPickerDialog
         open={pickerOpen}
-        title="方案外异色存档"
-        description="用于记录当前任务里意外抓到的异色。该记录只进入存档事件，不加入当前任务卡片区。"
+        title="记录意外异色"
+        description="用于记录当前任务中意外遇到的异色。该操作只进入异色存档，不加入当前任务卡片区。"
         spirits={spirits}
         allowCreate
         onClose={() => setPickerOpen(false)}

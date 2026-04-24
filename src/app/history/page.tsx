@@ -13,8 +13,9 @@ import {
   getTaskArchiveCount,
   getTotalNormalCount,
   getTotalPollutionCount,
+  isTaskInProgress,
 } from "@/lib/calculations";
-import { deleteTask, getTasks, setCurrentTask } from "@/lib/storage";
+import { deleteShinyArchiveRecord, deleteTask, getTasks, setCurrentTask } from "@/lib/storage";
 import { formatDateTime } from "@/lib/utils";
 import { ShinyArchiveRecord, Task } from "@/types";
 
@@ -75,7 +76,7 @@ function TaskListCard({
               <div className="text-sm font-black text-sky-600">{getTotalNormalCount(task)}</div>
             </div>
             <div className="rounded-2xl bg-white/80 p-2 text-center">
-              <div className="text-[10px] text-muted-foreground">已存档事件</div>
+              <div className="text-[10px] text-muted-foreground">异色成果</div>
               <div className="text-sm font-black text-emerald-600">{getTaskArchiveCount(task.id)}</div>
             </div>
           </div>
@@ -88,53 +89,73 @@ function TaskListCard({
 function ArchiveRecordCard({
   record,
   onOpen,
+  onDelete,
 }: {
   record: ShinyArchiveRecord;
   onOpen: (record: ShinyArchiveRecord) => void;
+  onDelete: (record: ShinyArchiveRecord) => void;
 }) {
   const clickable = record.clickable;
 
-  const content = (
+  return (
     <Card
-      className={`overflow-hidden p-4 ${clickable ? "bg-white/90 transition-transform hover:scale-[1.01]" : "bg-slate-50/90"}`}
+      className={`overflow-hidden p-4 ${
+        clickable ? "bg-white/90 transition-transform hover:scale-[1.01]" : "bg-slate-50/90"
+      }`}
     >
-      <div className="flex items-center gap-3">
-        <PetImage
-          src={record.spiritImage}
-          alt={record.spiritName}
-          className="h-16 w-16 rounded-full border-2 border-emerald-200"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap gap-2">
-            <Badge className={record.sourceType === "unexpected" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}>
-              {record.sourceType === "unexpected" ? "意外抓取" : "方案内异色"}
-            </Badge>
-            <Badge className="bg-white/80 text-slate-700">{record.planName}</Badge>
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={() => onDelete(record)}
+          className="shrink-0 text-xs text-red-500 transition hover:text-red-700"
+        >
+          删除
+        </button>
+        <div
+          role={clickable ? "button" : undefined}
+          tabIndex={clickable ? 0 : undefined}
+          onClick={clickable ? () => onOpen(record) : undefined}
+          onKeyDown={
+            clickable
+              ? (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onOpen(record);
+                  }
+                }
+              : undefined
+          }
+          className={`${clickable ? "cursor-pointer" : ""} flex min-w-0 flex-1 items-center gap-3`}
+        >
+          <PetImage
+            src={record.spiritImage}
+            alt={record.spiritName}
+            className="h-16 w-16 rounded-full border-2 border-emerald-200"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap gap-2">
+              <Badge className={record.sourceType === "unexpected" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}>
+                {record.sourceType === "unexpected" ? "意外异色" : "方案内异色"}
+              </Badge>
+              <Badge className="bg-white/80 text-slate-700">{record.planName}</Badge>
+            </div>
+            <h3 className="mt-2 text-base font-black">{record.spiritName}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(record.createdAt)}</p>
           </div>
-          <h3 className="mt-2 text-base font-black">{record.spiritName}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(record.createdAt)}</p>
         </div>
       </div>
     </Card>
-  );
-
-  if (!clickable) {
-    return content;
-  }
-
-  return (
-    <button type="button" onClick={() => onOpen(record)} className="w-full text-left">
-      {content}
-    </button>
   );
 }
 
 function ArchiveDetailDrawer({
   record,
   onClose,
+  onDelete,
 }: {
   record: ShinyArchiveRecord | null;
   onClose: () => void;
+  onDelete: (record: ShinyArchiveRecord) => void;
 }) {
   if (!record) return null;
 
@@ -157,9 +178,14 @@ function ArchiveDetailDrawer({
               <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(record.createdAt)}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            关闭
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => onDelete(record)}>
+              删除记录
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              关闭
+            </Button>
+          </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -186,14 +212,16 @@ export default function HistoryPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tab, setTab] = useState<"tasks" | "archives">("tasks");
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [archiveDeleteTarget, setArchiveDeleteTarget] = useState<ShinyArchiveRecord | null>(null);
   const [selectedArchive, setSelectedArchive] = useState<ShinyArchiveRecord | null>(null);
+  const [archiveRefreshKey, setArchiveRefreshKey] = useState(0);
 
   useEffect(() => {
     setTasks(getTasks());
   }, []);
 
-  const visibleTasks = useMemo(() => tasks, [tasks]);
-  const archives = useMemo(() => getRecentShinyRecords(), [tasks, tab]);
+  const visibleTasks = useMemo(() => tasks.filter((task) => isTaskInProgress(task)), [tasks]);
+  const archives = useMemo(() => getRecentShinyRecords(), [tasks, tab, archiveRefreshKey]);
 
   function refresh() {
     setTasks(getTasks());
@@ -209,6 +237,16 @@ export default function HistoryPage() {
     deleteTask(deleteTarget.id);
     setDeleteTarget(null);
     refresh();
+  }
+
+  function handleArchiveDelete() {
+    if (!archiveDeleteTarget) return;
+    deleteShinyArchiveRecord(archiveDeleteTarget.id);
+    if (selectedArchive?.id === archiveDeleteTarget.id) {
+      setSelectedArchive(null);
+    }
+    setArchiveDeleteTarget(null);
+    setArchiveRefreshKey((value) => value + 1);
   }
 
   return (
@@ -227,7 +265,7 @@ export default function HistoryPage() {
             size="sm"
             onClick={() => setTab("archives")}
           >
-            已存档异色记录
+            已存档异色
           </Button>
         </div>
 
@@ -235,9 +273,6 @@ export default function HistoryPage() {
           <>
             <div>
               <h2 className="text-sm font-black">任务列表</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                用于查看任务、进入任务记录页继续操作，以及删除任务。
-              </p>
             </div>
             {visibleTasks.length > 0 ? (
               <div className="grid gap-3">
@@ -260,9 +295,6 @@ export default function HistoryPage() {
           <>
             <div>
               <h2 className="text-sm font-black">已存档异色记录</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                按时间倒序混排展示方案内异色与方案外意外异色。
-              </p>
             </div>
 
             {archives.length > 0 ? (
@@ -272,6 +304,7 @@ export default function HistoryPage() {
                     key={record.id}
                     record={record}
                     onOpen={setSelectedArchive}
+                    onDelete={setArchiveDeleteTarget}
                   />
                 ))}
               </div>
@@ -287,17 +320,29 @@ export default function HistoryPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="确认删除任务"
-        description={`确定要删除「${deleteTarget?.taskName ?? ""}」吗？此操作无法撤销。`}
-        confirmText="删除"
+        description={`确定要删除“${deleteTarget?.taskName ?? ""}”吗？该操作只删除任务过程，不删除已经存档的异色成果。`}
+        confirmText="删除任务"
         cancelText="取消"
         confirmVariant="destructive"
         onCancel={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
       />
 
+      <ConfirmDialog
+        open={!!archiveDeleteTarget}
+        title="确认删除异色记录"
+        description={`确定要删除“${archiveDeleteTarget?.spiritName ?? ""}”的这条已存档异色记录吗？该操作只删除当前存档记录。`}
+        confirmText="删除记录"
+        cancelText="取消"
+        confirmVariant="destructive"
+        onCancel={() => setArchiveDeleteTarget(null)}
+        onConfirm={handleArchiveDelete}
+      />
+
       <ArchiveDetailDrawer
         record={selectedArchive}
         onClose={() => setSelectedArchive(null)}
+        onDelete={setArchiveDeleteTarget}
       />
     </PageShell>
   );

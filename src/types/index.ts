@@ -19,6 +19,8 @@ export interface PlanPreset {
   isDirected?: boolean;
 }
 
+export type ProgressMarkType = "pollution" | "normal";
+
 export interface SpiritCardLastAction {
   id: string;
   type: "pollution" | "normal" | "shiny";
@@ -26,6 +28,7 @@ export interface SpiritCardLastAction {
   previousPollutionCount: number;
   previousNormalCount: number;
   previousCurrentShinyCount: number;
+  previousProgressMarks?: ProgressMarkType[];
   archiveRecordId?: string;
 }
 
@@ -34,6 +37,7 @@ export interface TaskSpiritRecord {
   pollutionCount: number;
   normalCount: number;
   currentShinyCount: number;
+  progressMarks?: ProgressMarkType[];
   lastAction?: SpiritCardLastAction;
 }
 

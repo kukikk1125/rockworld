@@ -4,6 +4,7 @@ import baseSpirits from "@/data/petPresets.json";
 import { createTaskFromPlan, getSpiritByName } from "@/lib/task-factory";
 import {
   AppStorage,
+  ProgressMarkType,
   ShinyArchiveRecord,
   Spirit,
   Task,
@@ -19,6 +20,16 @@ const fallbackData: AppStorage = {
   currentTaskId: undefined,
   theme: "light",
 };
+
+function buildLegacyProgressMarks(
+  pollutionCount: number,
+  normalCount: number,
+): ProgressMarkType[] {
+  return [
+    ...Array.from({ length: Math.max(0, pollutionCount) }, () => "pollution" as const),
+    ...Array.from({ length: Math.max(0, normalCount) }, () => "normal" as const),
+  ];
+}
 
 function normalizeName(name: string) {
   return name.trim().toLowerCase().replace(/\s+/g, "");
@@ -126,6 +137,7 @@ function migrateLegacyTask(
     pollutionCount: 0,
     normalCount: 0,
     currentShinyCount: 0,
+    progressMarks: [],
   }));
 
   for (const record of pollutionRecords) {
@@ -142,6 +154,13 @@ function migrateLegacyTask(
       getSpiritByName(record.petName)?.id ?? createSpiritId(record.petName);
     const matched = spiritRecords.find((item) => item.spiritId === spiritId);
     if (matched) matched.normalCount = Math.max(0, Number(record.count ?? 0));
+  }
+
+  for (const record of spiritRecords) {
+    record.progressMarks = buildLegacyProgressMarks(
+      record.pollutionCount,
+      record.normalCount,
+    );
   }
 
   const archives: ShinyArchiveRecord[] = [];
@@ -235,6 +254,14 @@ function sanitizeTask(
         0,
         Number(record.currentShinyCount ?? record.shinyCount ?? 0),
       ),
+      progressMarks: Array.isArray(record.progressMarks)
+        ? record.progressMarks
+            .map((item) => (item === "normal" ? "normal" : item === "pollution" ? "pollution" : undefined))
+            .filter((item): item is ProgressMarkType => Boolean(item))
+        : buildLegacyProgressMarks(
+            Math.max(0, Number(record.pollutionCount ?? 0)),
+            Math.max(0, Number(record.normalCount ?? 0)),
+          ),
       lastAction:
         record.lastAction && typeof record.lastAction === "object"
           ? {
@@ -273,6 +300,37 @@ function sanitizeTask(
                       (record.lastAction as Record<string, unknown>).archiveRecordId,
                     )
                   : undefined,
+              previousProgressMarks: Array.isArray(
+                (record.lastAction as Record<string, unknown>).previousProgressMarks,
+              )
+                ? (
+                    (record.lastAction as Record<string, unknown>)
+                      .previousProgressMarks as unknown[]
+                  )
+                    .map((item) =>
+                      item === "normal"
+                        ? "normal"
+                        : item === "pollution"
+                          ? "pollution"
+                          : undefined,
+                    )
+                    .filter((item): item is ProgressMarkType => Boolean(item))
+                : buildLegacyProgressMarks(
+                    Math.max(
+                      0,
+                      Number(
+                        (record.lastAction as Record<string, unknown>)
+                          .previousPollutionCount ?? 0,
+                      ),
+                    ),
+                    Math.max(
+                      0,
+                      Number(
+                        (record.lastAction as Record<string, unknown>)
+                          .previousNormalCount ?? 0,
+                      ),
+                    ),
+                  ),
             }
           : undefined,
     }),
@@ -457,9 +515,6 @@ export function deleteTask(taskId: string) {
   saveAppData({
     ...data,
     tasks: data.tasks.filter((task) => task.id !== taskId),
-    shinyArchiveRecords: data.shinyArchiveRecords.filter(
-      (record) => record.taskId !== taskId,
-    ),
     currentTaskId: data.currentTaskId === taskId ? undefined : data.currentTaskId,
   });
 }

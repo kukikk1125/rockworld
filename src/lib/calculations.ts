@@ -6,6 +6,7 @@ import {
   getTasks,
 } from "@/lib/storage";
 import {
+  ProgressMarkType,
   ShinyArchiveRecord,
   Spirit,
   SpiritSummary,
@@ -13,11 +14,37 @@ import {
   TaskSpiritRecord,
 } from "@/types";
 
+function ensureProgressMarks(record: TaskSpiritRecord): ProgressMarkType[] {
+  if (Array.isArray(record.progressMarks)) {
+    return [...record.progressMarks];
+  }
+
+  return [
+    ...Array.from({ length: Math.max(0, record.pollutionCount) }, () => "pollution" as const),
+    ...Array.from({ length: Math.max(0, record.normalCount) }, () => "normal" as const),
+  ];
+}
+
+function countMarks(marks: ProgressMarkType[]) {
+  return {
+    pollutionCount: marks.filter((mark) => mark === "pollution").length,
+    normalCount: marks.filter((mark) => mark === "normal").length,
+  };
+}
+
 function cloneRecords(records: TaskSpiritRecord[]): TaskSpiritRecord[] {
   return records.map(
     (record): TaskSpiritRecord => ({
       ...record,
-      lastAction: record.lastAction ? { ...record.lastAction } : undefined,
+      progressMarks: ensureProgressMarks(record),
+      lastAction: record.lastAction
+        ? {
+            ...record.lastAction,
+            previousProgressMarks: record.lastAction.previousProgressMarks
+              ? [...record.lastAction.previousProgressMarks]
+              : undefined,
+          }
+        : undefined,
     }),
   );
 }
@@ -34,10 +61,12 @@ function upsertRecord(task: Task, spiritId: string) {
       pollutionCount: 0,
       normalCount: 0,
       currentShinyCount: 0,
+      progressMarks: [],
     };
     records.push(record);
   }
 
+  record.progressMarks = ensureProgressMarks(record);
   return { records, record: record as TaskSpiritRecord };
 }
 
@@ -51,7 +80,11 @@ function withTask(task: Task, spiritRecords: TaskSpiritRecord[]) {
 }
 
 export function getTaskSpiritProgress(record: TaskSpiritRecord) {
-  return record.pollutionCount + record.normalCount;
+  return ensureProgressMarks(record).length;
+}
+
+export function getTaskSpiritMarks(record: TaskSpiritRecord) {
+  return ensureProgressMarks(record);
 }
 
 export function getTotalPollutionCount(task: Task) {
@@ -74,8 +107,29 @@ export function hasTaskData(task: Task) {
   );
 }
 
+export function isTaskInProgress(task: Task) {
+  const hasActiveCounts = task.spiritRecords.some(
+    (record) =>
+      record.pollutionCount > 0 ||
+      record.normalCount > 0 ||
+      record.currentShinyCount > 0,
+  );
+
+  if (task.mode === "定向果实法") {
+    return hasActiveCounts;
+  }
+
+  return hasTaskData(task);
+}
+
 export function addPollutionCount(task: Task, spiritId: string, delta = 1) {
   const { records, record } = upsertRecord(task, spiritId);
+  const nextMarks = [...ensureProgressMarks(record)];
+
+  for (let index = 0; index < delta; index += 1) {
+    nextMarks.push("pollution");
+  }
+
   record.lastAction = {
     id: createId(),
     type: "pollution",
@@ -83,13 +137,22 @@ export function addPollutionCount(task: Task, spiritId: string, delta = 1) {
     previousPollutionCount: record.pollutionCount,
     previousNormalCount: record.normalCount,
     previousCurrentShinyCount: record.currentShinyCount,
+    previousProgressMarks: ensureProgressMarks(record),
   };
-  record.pollutionCount = Math.max(0, record.pollutionCount + delta);
+  record.progressMarks = nextMarks;
+  record.pollutionCount = countMarks(nextMarks).pollutionCount;
+  record.normalCount = countMarks(nextMarks).normalCount;
   return withTask(task, records);
 }
 
 export function addNormalCount(task: Task, spiritId: string, delta = 1) {
   const { records, record } = upsertRecord(task, spiritId);
+  const nextMarks = [...ensureProgressMarks(record)];
+
+  for (let index = 0; index < delta; index += 1) {
+    nextMarks.push("normal");
+  }
+
   record.lastAction = {
     id: createId(),
     type: "normal",
@@ -97,8 +160,11 @@ export function addNormalCount(task: Task, spiritId: string, delta = 1) {
     previousPollutionCount: record.pollutionCount,
     previousNormalCount: record.normalCount,
     previousCurrentShinyCount: record.currentShinyCount,
+    previousProgressMarks: ensureProgressMarks(record),
   };
-  record.normalCount = Math.max(0, record.normalCount + delta);
+  record.progressMarks = nextMarks;
+  record.pollutionCount = countMarks(nextMarks).pollutionCount;
+  record.normalCount = countMarks(nextMarks).normalCount;
   return withTask(task, records);
 }
 
@@ -165,11 +231,13 @@ export function archiveTargetShiny(
     previousPollutionCount: record.pollutionCount,
     previousNormalCount: record.normalCount,
     previousCurrentShinyCount: record.currentShinyCount,
+    previousProgressMarks: ensureProgressMarks(record),
     archiveRecordId: archiveRecord.id,
   };
   record.currentShinyCount = 0;
   record.pollutionCount = 0;
   record.normalCount = 0;
+  record.progressMarks = [];
 
   return {
     task: withTask(task, records),
@@ -195,11 +263,16 @@ export function undoSpiritLastAction(
 
   const { previousPollutionCount, previousNormalCount, previousCurrentShinyCount } =
     record.lastAction;
+  const previousProgressMarks = record.lastAction.previousProgressMarks ?? [
+    ...Array.from({ length: previousPollutionCount }, () => "pollution" as const),
+    ...Array.from({ length: previousNormalCount }, () => "normal" as const),
+  ];
   const removedArchiveId = record.lastAction.archiveRecordId;
 
   record.pollutionCount = previousPollutionCount;
   record.normalCount = previousNormalCount;
   record.currentShinyCount = previousCurrentShinyCount;
+  record.progressMarks = [...previousProgressMarks];
   record.lastAction = undefined;
 
   return {

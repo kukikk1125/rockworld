@@ -20,9 +20,6 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black">数据总览</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                这里优先承载个人累计统计，而不是复杂设置。
-              </p>
             </div>
             <Badge className="bg-secondary text-secondary-foreground">总览页</Badge>
           </div>
@@ -48,10 +45,7 @@ export default function SettingsPage() {
           {recentShiny.length > 0 ? (
             <div className="mt-4 grid grid-cols-3 gap-3">
               {recentShiny.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl bg-white/85 p-3 text-center"
-                >
+                <div key={item.id} className="rounded-2xl bg-white/85 p-3 text-center">
                   <PetImage
                     src={item.spiritImage}
                     alt={item.spiritName}
